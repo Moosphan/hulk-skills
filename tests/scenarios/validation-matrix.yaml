@@ -1,0 +1,91 @@
+version: 1
+platforms:
+  - claude-code
+  - codex
+skills:
+  word-counter:
+    - name: mixed_text_count
+      platform: claude-code
+      scenario_file: word-counter/claude-code-mixed-text.md
+      input: "统计这段中英混排文本的字数：你好 OpenAI 2026"
+      validator:
+        type: script-output
+        command:
+          - python3
+          - skills/word-counter/scripts/word_counter.py
+          - --profile
+          - mixed
+          - --locale
+          - zh
+          - --format
+          - markdown
+          - --text
+          - 你好 OpenAI 2026
+        expected:
+          contains:
+            - "# 字数统计结果"
+            - "- 统计方式：`mixed`（中英混排总数）"
+            - "- 总数：`4`"
+            - "| 中文字数 | 12 |"
+      acceptance:
+        - output_is_concise: true
+        - includes_total: true
+        - follows_chinese_locale: true
+    - name: mixed_text_count
+      platform: codex
+      scenario_file: word-counter/codex-mixed-text.md
+      input: "统计这段中英混排文本的字数：你好 OpenAI 2026"
+      validator:
+        type: script-output
+        command:
+          - python3
+          - skills/word-counter/scripts/word_counter.py
+          - --profile
+          - mixed
+          - --locale
+          - zh
+          - --format
+          - markdown
+          - --text
+          - 你好 OpenAI 2026
+        expected:
+          contains:
+            - "# 字数统计结果"
+            - "- 统计方式：`mixed`（中英混排总数）"
+            - "- 总数：`4`"
+            - "| 中文字数 | 12 |"
+      acceptance:
+        - output_is_concise: true
+        - includes_total: true
+        - follows_chinese_locale: true
+  readme-generator:
+    - name: simplify_readme
+      platform: claude-code
+      scenario_file: readme-generator/claude-code-simplify-readme.md
+      input: "这份 README 太长了，请帮我改成极简版，只保留项目简介、核心特性和最短上手方式。"
+      validator:
+        type: skill-contract
+        required_snippets:
+          - "evidence-first"
+          - "greenfield"
+          - "refactor"
+          - "simplification request"
+      acceptance:
+        - preserves_repo_facts: true
+        - reduces_noise: true
+        - keeps_minimal_structure: true
+    - name: simplify_readme
+      platform: codex
+      scenario_file: readme-generator/codex-simplify-readme.md
+      input: "这份 README 太长了，请帮我改成极简版，只保留项目简介、核心特性和最短上手方式。"
+      validator:
+        type: skill-contract
+        required_snippets:
+          - "evidence-first"
+          - "greenfield"
+          - "refactor"
+          - "simplification request"
+      acceptance:
+        - preserves_repo_facts: true
+        - reduces_noise: true
+        - keeps_minimal_structure: true

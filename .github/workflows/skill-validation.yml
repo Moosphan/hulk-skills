@@ -1,0 +1,46 @@
+name: Skill Validation
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "skills/**"
+      - "tests/**"
+      - "tooling/**"
+      - ".github/workflows/skill-validation.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "skills/**"
+      - "tests/**"
+      - "tooling/**"
+      - ".github/workflows/skill-validation.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: Run skill validation
+        run: python tooling/run-skill-validation.py
+
+      - name: Build install packages
+        run: python tooling/build-skill-packages.py --clean --version ${{ github.sha }}
+
+      - name: Upload install packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-install-packages
+          path: dist/
+          if-no-files-found: error

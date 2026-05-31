@@ -1,0 +1,7 @@
+interface:
+  display_name: "Word Counter"
+  short_description: "Count Chinese characters and English words with fixed rules"
+  default_prompt: "Use this skill to deterministically count Chinese, English, or mixed-language text and explain which profile was applied."
+
+policy:
+  allow_implicit_invocation: true

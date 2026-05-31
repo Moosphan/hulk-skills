@@ -1,0 +1,7 @@
+interface:
+  display_name: "README Generator"
+  short_description: "Generate or refine evidence-first repository READMEs"
+  default_prompt: "Use this skill to write, simplify, or refactor a repository README while grounding claims in repository evidence."
+
+policy:
+  allow_implicit_invocation: true
