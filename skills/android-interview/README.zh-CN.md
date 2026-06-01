@@ -14,6 +14,50 @@
 - 输出 `report.html`、`score.json`、`transcript.md`、`screening-summary.md` 等本地产物
 - 安装 `edge-tts` 后可以额外生成 TTS 音频文件
 
+## 技术架构
+
+这个 skill 目前本质上是“manifest + Python 运行时”的组合。
+
+```mermaid
+flowchart TD
+  A[JD / 简历 / 题库] --> B[面试计划生成]
+  B --> C[题目选择]
+  C --> D[面试运行时]
+  D --> D1[自我介绍]
+  D1 --> D2[简历验证轮]
+  D2 --> D3[一面]
+  D3 --> D4[二面]
+  D4 --> D5[三面]
+  D5 --> D6[HR 面]
+  D6 --> E[规则评分引擎]
+  E --> F[轮次总结与评审]
+  F --> G[最终结论]
+  G --> H[报告渲染]
+  D --> I[可选 TTS]
+  H --> J[本地产物]
+```
+
+- 运行时执行的是完整面试流程，而不是单题问答。
+- 文档中把运行时的 `screening` 轮称为“简历验证轮”，用于和面试前生成的“预筛选结果”区分。
+- 每一轮都可以包含多道主问题和若干追问。
+- 运行时可以切题、升高难度、降低难度，或 hold 一轮再做补充探针。
+
+- `SKILL.md` 只负责描述 skill 的用途和可调用脚本。
+- `scripts/interview_core.py` 承担计划、选题、评分、总结和报告生成。
+- `scripts/run_interactive_session.py` 与 `scripts/run_interview_session.py` 是主要运行入口。
+- `tests/skills/android-interview/` 提供可重复验证的 fixtures。
+- `tests/scenarios/android-interview/` 和 `tooling/run-skill-validation.py` 负责端到端校验。
+
+## 流程说明
+
+1. 解析 JD、简历和题库输入。
+2. 根据轮次生成计划，确定重点、语言模式、题目数量和轮次顺序。
+3. 先生成预筛选结果和简历准备简报。
+4. 先选题库题，不够时再生成兜底题。
+5. 按 `intro`、`screening`（简历验证轮）、`round1`、`round2`、`round3`、`hr` 执行完整面试，包含追问、自适应路由和可选暂停恢复。
+6. 用规则引擎对每个回答打分，并聚合成轮次总结与评审结论。
+7. 渲染转录稿、评分卡、panel notes、通过/失败总结和最终 HTML 报告。
+
 ## 目录结构
 
 ```text

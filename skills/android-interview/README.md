@@ -14,6 +14,50 @@ English | [中文](./README.zh-CN.md)
 - Writes local artifacts including `report.html`, `score.json`, `transcript.md`, `screening-summary.md`, and checkpoint files
 - Optionally generates TTS audio artifacts when `edge-tts` is installed
 
+## Architecture
+
+This skill is a thin manifest plus a Python runtime.
+
+```mermaid
+flowchart TD
+  A[JD / Resume / Question Bank] --> B[Plan Builder]
+  B --> C[Question Selector]
+  C --> D[Interview Runtime]
+  D --> D1[Intro]
+  D1 --> D2[Resume Validation]
+  D2 --> D3[Round 1]
+  D3 --> D4[Round 2]
+  D4 --> D5[Round 3]
+  D5 --> D6[HR]
+  D6 --> E[Rule Scoring Engine]
+  E --> F[Round Summary & Deliberation]
+  F --> G[Final Decision]
+  G --> H[Report Renderer]
+  D --> I[Optional TTS]
+  H --> J[Local Artifacts]
+```
+
+- The runtime executes the full interview sequence, not a single flat Q&A.
+- In documentation, the runtime `screening` round is described as `Resume Validation` to distinguish it from the pre-interview screening summary artifact.
+- Each round can contain multiple main questions plus follow-ups.
+- The runtime can switch topic, increase difficulty, lower difficulty, or hold a round for one more probe.
+
+- `SKILL.md` defines when to use the skill and which scripts are available.
+- `scripts/interview_core.py` holds the planning, scoring, reporting, and routing logic.
+- `scripts/run_interactive_session.py` and `scripts/run_interview_session.py` are the main runtimes.
+- `tests/skills/android-interview/` provides fixtures for repeatable validation.
+- `tests/scenarios/android-interview/` and `tooling/run-skill-validation.py` verify the end-to-end behavior.
+
+## Flow
+
+1. Parse JD, resume, and question bank inputs.
+2. Build a round plan with focus areas, language, target question counts, and round ordering.
+3. Generate pre-interview screening and resume-prep artifacts.
+4. Select bank questions and generate fallback questions when coverage is incomplete.
+5. Run `intro`, `screening` (resume validation), `round1`, `round2`, `round3`, and `hr` with follow-ups, adaptive routing, and optional pause/resume.
+6. Score each answer with a rule-based evaluator and aggregate round summaries and deliberations.
+7. Render transcripts, scorecards, panel notes, pass/fail summaries, and the final HTML report.
+
 ## Directory Layout
 
 ```text
