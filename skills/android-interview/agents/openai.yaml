@@ -1,7 +1,30 @@
 interface:
   display_name: "Android Interview"
-  short_description: "Run structured Android mock interviews with reports and TTS artifacts"
-  default_prompt: "Use this skill to simulate a structured Android interview from a JD and resume, score the candidate, and write local report artifacts."
+  short_description: "Run a Markdown-first Android interview skill with optional local artifacts"
+  default_prompt: "Use this skill to conduct a structured Android interview directly from SKILL.md and references, then optionally render local report artifacts."
+
+runtime:
+  ai_modes:
+    - "off"
+    - "assist"
+    - "required"
+  default_ai_mode: "off"
+  providers:
+    - "auto"
+    - "openai-compatible"
+    - "fixture"
+    - "none"
+  default_provider: "auto"
+  default_model: "gpt-4.1-mini"
+  roles:
+    planner: "round planning and next-action strategy"
+    interviewer: "main question and grounded follow-up generation"
+    evaluator: "rubric scoring with evidence and confidence"
+    consistency_checker: "cross-turn contradiction and risk checks"
+    round_panel: "round-level deliberation and carry-forward risks"
+  fallback:
+    mode: "deterministic"
+    description: "The existing Python rule/template pipeline is the full fallback and can be isolated with --ai-mode off."
 
 policy:
   allow_implicit_invocation: true

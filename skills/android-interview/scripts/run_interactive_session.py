@@ -59,6 +59,9 @@ from interview_core import (
 )
 from question_bank import Question, load_question_bank, validate_question_bank, write_question_bank_validation_artifacts
 from tts_support import edge_tts_available
+from ai_client import AIClientError
+from ai_schemas import AIConfig
+from ai_services import InterviewAIServices
 
 
 def parse_args() -> argparse.Namespace:
@@ -84,6 +87,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--round-language-overrides", default="", help="Comma-separated round=language overrides, e.g. round2=bilingual,hr=zh.")
     parser.add_argument("--question-target-overrides", default="", help="Comma-separated round=count overrides, e.g. round1=1,round2=2.")
     parser.add_argument("--scripted-answers", help="Optional JSON file for scripted interactive testing.")
+    parser.add_argument("--ai-mode", default="off", choices=["off", "assist", "required"], help="AI runtime mode. off isolates the deterministic fallback; assist uses AI with fallback; required fails if AI is unavailable.")
+    parser.add_argument("--ai-provider", default="auto", choices=["auto", "openai-compatible", "fixture", "none"], help="AI provider adapter.")
+    parser.add_argument("--model", default="", help="AI model name for provider-backed modes.")
+    parser.add_argument("--ai-timeout-seconds", type=int, default=45, help="Timeout for each AI call.")
+    parser.add_argument("--ai-cache-dir", default="", help="Reserved cache directory for AI calls.")
+    parser.add_argument("--ai-fixture-dir", default="", help="Fixture directory for provider=fixture.")
     return parser.parse_args()
 
 
@@ -871,6 +880,17 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
     round_persona_overrides = parse_round_persona_overrides(args.round_persona_overrides)
     round_language_overrides = parse_round_language_overrides(args.round_language_overrides)
     question_target_overrides = parse_question_target_overrides(args.question_target_overrides)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    ai_config = AIConfig(
+        mode=args.ai_mode,
+        provider=args.ai_provider,
+        model=args.model,
+        timeout_seconds=args.ai_timeout_seconds,
+        cache_dir=args.ai_cache_dir,
+        fixture_dir=args.ai_fixture_dir,
+    )
+    ai_services = InterviewAIServices(ai_config, output_dir)
     extra_input_config = {
         "default_persona": resolved_default_persona,
         "round_persona_overrides": round_persona_overrides,
@@ -878,9 +898,8 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
         "question_target_overrides": question_target_overrides,
         "live_feedback": show_live_feedback,
         "adaptive_runtime_routing": bool(args.adaptive_runtime_routing),
+        **ai_services.metadata(),
     }
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
     input_paths = {
         "jd": str(Path(args.jd)),
@@ -1137,21 +1156,22 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
 
         follow_up_answers: list[str] = []
         follow_up_chain: list[dict[str, str]] = []
-        score, confidence, strengths, risks, missing, question_alignment = score_answer(answer, follow_up_answers, question)
-        candidates = follow_up_candidates(
-            question,
-            persona,
-            round_language,
-            missing,
-            risks,
+        score, confidence, strengths, risks, missing, question_alignment = ai_services.evaluate_answer(answer, follow_up_answers, question, score_answer)
+        candidates = ai_services.follow_up_candidates(
+            question=question,
+            persona=persona,
+            language=round_language,
+            missing_evidence=missing,
+            risk_evidence=risks,
             previous_results=results,
             current_text=" ".join([answer, *follow_up_answers]),
+            fallback=follow_up_candidates,
         )
         max_follow_ups = max_follow_up_count(question, persona)
         follow_up_count = 0
 
         while follow_up_count < max_follow_ups and candidates:
-            decision_preview = decide_result(score, confidence, missing, risks, question.round)
+            decision_preview = ai_services.decide_result(score, confidence, missing, risks, question.round, question_alignment, decide_result)
             if follow_up_answers and decision_preview in {"switch_topic", "complete_round_pass", "advance_same_round"} and (score >= 3 or not missing):
                 break
             candidate = candidates.pop(0)
@@ -1193,11 +1213,11 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
                     notes=candidate["notes"],
                 )
             )
-            score, confidence, strengths, risks, missing, question_alignment = score_answer(answer, follow_up_answers, question)
+            score, confidence, strengths, risks, missing, question_alignment = ai_services.evaluate_answer(answer, follow_up_answers, question, score_answer)
             if score >= 4 and confidence >= 0.78 and not missing:
                 break
 
-        result_decision = decide_result(score, confidence, missing, risks, question.round)
+        result_decision = ai_services.decide_result(score, confidence, missing, risks, question.round, question_alignment, decide_result)
         result_reason = decision_reason(result_decision, score, confidence, missing, risks)
         result = QuestionResult(
             id=question.id,
@@ -1887,6 +1907,7 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
             tts_status = "edge-tts-not-installed"
 
     session_state_history.extend(["reporting", "completed"])
+    extra_input_config.update(ai_services.metadata())
     session_data = session_payload(
         session_id=session_id,
         level=args.level,
@@ -1923,8 +1944,10 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
     )
     score_data = score_payload(results, hard_fail_flags, decision, round_summaries, round_scorecards, consistency_summary, round_deliberations)
     score_data["interactive_mode"] = True
+    score_data["ai_runtime"] = ai_services.metadata()
 
     write_json(output_dir / "session.json", session_data)
+    write_json(output_dir / "ai-runtime.json", ai_services.trace_payload())
     write_json(output_dir / "panel-notes.json", {"panel_memos": panel_memos})
     panel_notes_lines = [f"# Panel Notes - {session_id}", ""]
     if panel_memos:
@@ -2008,7 +2031,10 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
 
 def main() -> int:
     args = parse_args()
-    interactive_run(args)
+    try:
+        interactive_run(args)
+    except AIClientError as exc:
+        raise SystemExit(f"AI runtime failed in required mode: {exc}") from exc
     return 0
 
 

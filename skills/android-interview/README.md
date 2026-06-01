@@ -3,60 +3,80 @@
 
 English | [中文](./README.zh-CN.md)
 
-`android-interview` is a Python-based skill for running structured Android mock interviews from a JD, a resume, and optional Markdown question banks. It supports both batch simulation and turn-by-turn interactive sessions, then writes local interview artifacts such as reports, transcripts, scorecards, and optional TTS audio files.
+`android-interview` is a Markdown-first skill for structured Android mock interviews from a JD, a resume, and optional Markdown question banks. Claude Code is expected to conduct the main interview flow directly from `SKILL.md` and `references/*.md`, while local Python scripts remain optional helpers for validation, rendering, TTS, and deterministic regression runs.
 
 ## Highlights
 
 - Runs a multi-round Android interview flow instead of flat one-off Q&A
+- Keeps the main interview intelligence in `SKILL.md` and `references/*.md`
 - Uses JD, resume, and question-bank evidence to build a traceable interview plan
-- Supports batch MVP runs and interactive CLI interviews
+- Keeps legacy batch and interactive CLI runners available for fallback, demos, and regression
 - Validates external Markdown question banks before the session starts
 - Writes local artifacts including `report.html`, `score.json`, `transcript.md`, `screening-summary.md`, and checkpoint files
 - Optionally generates TTS audio artifacts when `edge-tts` is installed
 
 ## Architecture
 
-This skill is a thin manifest plus a Python runtime.
+This skill is organized around a Markdown-first skill contract plus optional local helpers.
 
 ```mermaid
 flowchart TD
-  A[JD / Resume / Question Bank] --> B[Plan Builder]
-  B --> C[Question Selector]
-  C --> D[Interview Runtime]
-  D --> D1[Intro]
-  D1 --> D2[Resume Validation]
-  D2 --> D3[Round 1]
-  D3 --> D4[Round 2]
-  D4 --> D5[Round 3]
-  D5 --> D6[HR]
-  D6 --> E[Rule Scoring Engine]
-  E --> F[Round Summary & Deliberation]
+  A[JD / Resume / Question Bank] --> B[SKILL.md]
+  B --> C[references/*.md]
+  C --> D[Claude Code Interview Engine]
+  D --> E[Questioning / Follow-up / Scoring]
+  E --> F[Round Deliberation]
   F --> G[Final Decision]
-  G --> H[Report Renderer]
-  D --> I[Optional TTS]
-  H --> J[Local Artifacts]
+  G --> H[Optional Scripts]
+  H --> I[Local Artifacts]
+  H -. legacy .-> J[Deterministic Runtime]
 ```
 
-- The runtime executes the full interview sequence, not a single flat Q&A.
-- In documentation, the runtime `screening` round is described as `Resume Validation` to distinguish it from the pre-interview screening summary artifact.
-- Each round can contain multiple main questions plus follow-ups.
-- The runtime can switch topic, increase difficulty, lower difficulty, or hold a round for one more probe.
-
-- `SKILL.md` defines when to use the skill and which scripts are available.
-- `scripts/interview_core.py` holds the planning, scoring, reporting, and routing logic.
-- `scripts/run_interactive_session.py` and `scripts/run_interview_session.py` are the main runtimes.
+- `SKILL.md` defines when to use the skill and the required read order for the references.
+- `references/*.md` hold the primary interview behavior: intake, planning, question generation, follow-up, scoring, consistency checks, and reporting.
+- `scripts/interview_core.py` holds the deterministic fallback planning, scoring, reporting, and routing logic.
+- `scripts/render_skill_artifacts.py` renders local artifacts from structured `session.json` and `score.json` payloads without requiring the legacy runtime to conduct the interview.
+- `scripts/run_interactive_session.py` and `scripts/run_interview_session.py` are legacy scripted runtimes for demo, validation, and explicit fallback usage.
+- `scripts/ai_client.py`, `scripts/ai_schemas.py`, and `scripts/ai_services.py` provide an optional hot-swappable AI boundary for the scripted runtimes.
 - `tests/skills/android-interview/` provides fixtures for repeatable validation.
 - `tests/scenarios/android-interview/` and `tooling/run-skill-validation.py` verify the end-to-end behavior.
 
 ## Flow
 
-1. Parse JD, resume, and question bank inputs.
-2. Build a round plan with focus areas, language, target question counts, and round ordering.
-3. Generate pre-interview screening and resume-prep artifacts.
-4. Select bank questions and generate fallback questions when coverage is incomplete.
-5. Run `intro`, `screening` (resume validation), `round1`, `round2`, `round3`, and `hr` with follow-ups, adaptive routing, and optional pause/resume.
-6. Score each answer with a rule-based evaluator and aggregate round summaries and deliberations.
-7. Render transcripts, scorecards, panel notes, pass/fail summaries, and the final HTML report.
+1. Read `SKILL.md` and the required `references/*.md` files.
+2. Analyze JD and resume into structured profiles.
+3. Plan rounds, personas, question strategy, and output mode in the conversation.
+4. Conduct the interview directly in chat, asking one question at a time and following up from evidence gaps.
+5. Use scripts only when needed for deterministic helpers such as question-bank validation, rendering, TTS, or scripted regression.
+6. Optionally render transcripts, scorecards, panel notes, pass/fail summaries, and HTML reports locally.
+
+## Recommended Usage
+
+Treat the skill conversation as the default product surface.
+
+1. Start in Claude Code or Codex with a JD, a resume, and the target level.
+2. Let the assistant read `SKILL.md` and `references/*.md`, then conduct the interview directly in chat.
+3. If you need local deliverables, ask for structured outputs and render them with `scripts/render_skill_artifacts.py`.
+4. Use the scripted runners only when you explicitly want deterministic fallback, demo runs, or regression validation.
+
+## AI Runtime Modes
+
+The current deterministic implementation has been demoted to a complete fallback path. You can hot-swap behavior with one flag:
+
+- `--ai-mode off`
+  - isolate AI completely and run the deterministic fallback end to end
+- `--ai-mode assist`
+  - try AI scoring/follow-up generation first, then fall back automatically if the provider is unavailable or returns invalid JSON
+- `--ai-mode required`
+  - require AI; fail fast instead of silently falling back
+
+Provider options:
+
+- `--ai-provider auto|openai-compatible|fixture|none`
+- `--model <name>`
+- `--ai-fixture-dir /path/to/fixtures`
+
+`openai-compatible` reads `OPENAI_API_KEY`, optional `OPENAI_BASE_URL`, and optional `OPENAI_MODEL` from the environment. Each run writes `ai-runtime.json`; AI requests and failures are audited under `ai-calls/`.
 
 ## Directory Layout
 
@@ -64,9 +84,22 @@ flowchart TD
 skills/android-interview/
 ├── agents/
 │   └── openai.yaml
+├── references/
+│   ├── 00-overview.md
+│   ├── 01-intake.md
+│   ├── 02-jd-resume-analysis.md
+│   ├── 03-interview-flow.md
+│   ├── 04-question-generation.md
+│   ├── 05-follow-up-policy.md
+│   ├── 06-scoring-rubric.md
+│   ├── 07-consistency-check.md
+│   ├── 08-round-deliberation.md
+│   ├── 09-report-output.md
+│   └── 10-question-bank-format.md
 ├── scripts/
 │   ├── interview_core.py
 │   ├── question_bank.py
+│   ├── render_skill_artifacts.py
 │   ├── run_interactive_session.py
 │   ├── run_interview_session.py
 │   ├── run_mvp_demo.py
@@ -93,9 +126,26 @@ python3 -m pip install -r skills/android-interview/scripts/requirements.txt
 
 If you want audio output, keep `edge-tts` installed and add `--enable-tts` to the session command.
 
-## Quick Start
+## Skill-First Quick Start
 
-All commands below assume you are running from the repository root.
+Use the skill directly in the chat first. A typical request looks like:
+
+```text
+Use the android-interview skill. Here is the JD, here is the resume, target level is senior, and I want a full interview plus local report artifacts.
+```
+
+If the conversation already produced structured `session.json` and `score.json` payloads, render the standard local artifacts with:
+
+```bash
+python3 skills/android-interview/scripts/render_skill_artifacts.py \
+  --session-json /path/to/session.json \
+  --score-json /path/to/score.json \
+  --output-dir dist/interview-reports/rendered-from-skill
+```
+
+## Legacy Runner Quick Start
+
+All commands below assume you are running from the repository root. These commands are for fallback, demo, or regression usage rather than the default skill experience.
 
 ### 1. Run the batch MVP demo
 
@@ -241,6 +291,10 @@ Supported values from the current validator:
 - `--deliberation-bridge-probes`
 - `--stop-after-questions N`
 - `--resume-state /path/to/session-checkpoint.json`
+- `--ai-mode off|assist|required`
+- `--ai-provider auto|openai-compatible|fixture|none`
+- `--model <name>`
+- `--ai-fixture-dir /path/to/fixtures`
 
 ## Output Artifacts
 
@@ -252,6 +306,8 @@ Session output directories can include:
 - `session-checkpoint.json`
 - `session-progress.json`
 - `score.json`
+- `ai-runtime.json`
+- `ai-calls/`
 - `interview-plan.json`
 - `panel-notes.json`
 - `panel-notes.md`

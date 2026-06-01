@@ -90,6 +90,80 @@ skills:
         - reduces_noise: true
         - keeps_minimal_structure: true
   android-interview:
+    - name: markdown_first_structure
+      platform: claude-code
+      scenario_file: android-interview/claude-code-markdown-first-structure.md
+      input: "Inspect the Android interview skill and confirm that the primary interview contract lives in SKILL.md and references, with scripts positioned as optional helpers or legacy fallback."
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - references/00-overview.md
+          - references/01-intake.md
+          - references/02-jd-resume-analysis.md
+          - references/03-interview-flow.md
+          - references/04-question-generation.md
+          - references/05-follow-up-policy.md
+          - references/06-scoring-rubric.md
+          - references/07-consistency-check.md
+          - references/08-round-deliberation.md
+          - references/09-report-output.md
+          - references/10-question-bank-format.md
+        required_file_contains:
+          SKILL.md:
+            - "Claude Code itself is the primary interview engine."
+            - "Read `references/*.md`"
+            - "Do not default to running the legacy Python runtime"
+          references/00-overview.md:
+            - "Scripts are helpers"
+          references/03-interview-flow.md:
+            - "Question Loop"
+            - "Round Review"
+          references/06-scoring-rubric.md:
+            - "Every scored answer must include"
+          references/09-report-output.md:
+            - "generate structured content first"
+      acceptance:
+        - markdown_first_contract_is_present: true
+        - references_exist: true
+        - legacy_runtime_is_demoted: true
+    - name: markdown_first_structure
+      platform: codex
+      scenario_file: android-interview/codex-markdown-first-structure.md
+      input: "Inspect the Android interview skill and confirm that the primary interview contract lives in SKILL.md and references, with scripts positioned as optional helpers or legacy fallback."
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - references/00-overview.md
+          - references/01-intake.md
+          - references/02-jd-resume-analysis.md
+          - references/03-interview-flow.md
+          - references/04-question-generation.md
+          - references/05-follow-up-policy.md
+          - references/06-scoring-rubric.md
+          - references/07-consistency-check.md
+          - references/08-round-deliberation.md
+          - references/09-report-output.md
+          - references/10-question-bank-format.md
+        required_file_contains:
+          SKILL.md:
+            - "Claude Code itself is the primary interview engine."
+            - "Read `references/*.md`"
+            - "Do not default to running the legacy Python runtime"
+          references/00-overview.md:
+            - "Scripts are helpers"
+          references/03-interview-flow.md:
+            - "Question Loop"
+            - "Round Review"
+          references/06-scoring-rubric.md:
+            - "Every scored answer must include"
+          references/09-report-output.md:
+            - "generate structured content first"
+      acceptance:
+        - markdown_first_contract_is_present: true
+        - references_exist: true
+        - legacy_runtime_is_demoted: true
     - name: mvp_session
       platform: claude-code
       scenario_file: android-interview/claude-code-mvp-session.md
@@ -224,6 +298,58 @@ skills:
         - writes_local_artifacts: true
         - includes_stage_events: true
         - keeps_round_level_decisions: true
+    - name: render_skill_artifacts
+      platform: claude-code
+      scenario_file: android-interview/claude-code-render-skill-artifacts.md
+      input: "Render local Android interview artifacts from structured session and score payloads without rerunning the interview runtime."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/render_skill_artifacts.py
+          - --session-json
+          - dist/interview-reports/validation-claude-code-interactive/session.json
+          - --score-json
+          - dist/interview-reports/validation-claude-code-interactive/score.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-rendered
+        expected_contains:
+          - "session_id=validation-claude-code-interactive"
+          - "decision=pass"
+          - "artifacts_rendered=true"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-rendered/session.json
+          - dist/interview-reports/validation-claude-code-rendered/score.json
+          - dist/interview-reports/validation-claude-code-rendered/screening-summary.json
+          - dist/interview-reports/validation-claude-code-rendered/screening-summary.md
+          - dist/interview-reports/validation-claude-code-rendered/resume-prep.json
+          - dist/interview-reports/validation-claude-code-rendered/resume-prep.md
+          - dist/interview-reports/validation-claude-code-rendered/question-bank-validation.json
+          - dist/interview-reports/validation-claude-code-rendered/question-bank-validation.md
+          - dist/interview-reports/validation-claude-code-rendered/panel-notes.json
+          - dist/interview-reports/validation-claude-code-rendered/turn-events.json
+          - dist/interview-reports/validation-claude-code-rendered/transcript.md
+          - dist/interview-reports/validation-claude-code-rendered/report.html
+          - dist/interview-reports/validation-claude-code-rendered/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-rendered/session.json:
+            - '"interactive_mode": true'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-claude-code-rendered/score.json:
+            - '"question_count": 10'
+            - '"final_decision": "pass"'
+          dist/interview-reports/validation-claude-code-rendered/transcript.md:
+            - 'Round Deliberations'
+            - 'Generated Round3 Technical Influence'
+          dist/interview-reports/validation-claude-code-rendered/report.html:
+            - '筛选快照'
+            - '轮次评审'
+            - '一致性检查'
+            - '题库对齐度'
+      acceptance:
+        - renders_artifacts_from_structured_outputs: true
+        - preserves_existing_interview_evidence: true
     - name: question_bank_validation
       platform: claude-code
       scenario_file: android-interview/claude-code-question-bank-validation.md
@@ -715,6 +841,58 @@ skills:
         - writes_local_artifacts: true
         - includes_stage_events: true
         - keeps_round_level_decisions: true
+    - name: render_skill_artifacts
+      platform: codex
+      scenario_file: android-interview/codex-render-skill-artifacts.md
+      input: "Render local Android interview artifacts from structured session and score payloads without rerunning the interview runtime."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/render_skill_artifacts.py
+          - --session-json
+          - dist/interview-reports/validation-codex-interactive/session.json
+          - --score-json
+          - dist/interview-reports/validation-codex-interactive/score.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-rendered
+        expected_contains:
+          - "session_id=validation-codex-interactive"
+          - "decision=pass"
+          - "artifacts_rendered=true"
+        expected_files:
+          - dist/interview-reports/validation-codex-rendered/session.json
+          - dist/interview-reports/validation-codex-rendered/score.json
+          - dist/interview-reports/validation-codex-rendered/screening-summary.json
+          - dist/interview-reports/validation-codex-rendered/screening-summary.md
+          - dist/interview-reports/validation-codex-rendered/resume-prep.json
+          - dist/interview-reports/validation-codex-rendered/resume-prep.md
+          - dist/interview-reports/validation-codex-rendered/question-bank-validation.json
+          - dist/interview-reports/validation-codex-rendered/question-bank-validation.md
+          - dist/interview-reports/validation-codex-rendered/panel-notes.json
+          - dist/interview-reports/validation-codex-rendered/turn-events.json
+          - dist/interview-reports/validation-codex-rendered/transcript.md
+          - dist/interview-reports/validation-codex-rendered/report.html
+          - dist/interview-reports/validation-codex-rendered/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-rendered/session.json:
+            - '"interactive_mode": true'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-codex-rendered/score.json:
+            - '"question_count": 10'
+            - '"final_decision": "pass"'
+          dist/interview-reports/validation-codex-rendered/transcript.md:
+            - 'Round Deliberations'
+            - 'Generated Round3 Technical Influence'
+          dist/interview-reports/validation-codex-rendered/report.html:
+            - '筛选快照'
+            - '轮次评审'
+            - '一致性检查'
+            - '题库对齐度'
+      acceptance:
+        - renders_artifacts_from_structured_outputs: true
+        - preserves_existing_interview_evidence: true
     - name: question_bank_validation
       platform: codex
       scenario_file: android-interview/codex-question-bank-validation.md

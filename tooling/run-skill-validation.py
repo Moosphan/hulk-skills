@@ -88,6 +88,32 @@ def validate_skill_contract(root: Path, skill_name: str, validator: dict[str, An
     return checks
 
 
+def validate_skill_structure(root: Path, skill_name: str, validator: dict[str, Any]) -> list[CheckResult]:
+    skill_dir = root / "skills" / skill_name
+    checks = []
+
+    for rel_path in validator.get("required_files", []):
+        target = skill_dir / rel_path
+        if target.exists():
+            checks.append(CheckResult("PASS", f"skill file exists: {(Path('skills') / skill_name / rel_path)!s}"))
+        else:
+            checks.append(CheckResult("FAIL", f"missing skill file: {(Path('skills') / skill_name / rel_path)!s}"))
+
+    for rel_path, snippets in validator.get("required_file_contains", {}).items():
+        target = skill_dir / rel_path
+        if not target.exists():
+            checks.append(CheckResult("FAIL", f"missing skill file for content check: {(Path('skills') / skill_name / rel_path)!s}"))
+            continue
+        text = target.read_text(encoding="utf-8")
+        for snippet in snippets:
+            if snippet in text:
+                checks.append(CheckResult("PASS", f"{(Path('skills') / skill_name / rel_path)!s} contains {snippet!r}"))
+            else:
+                checks.append(CheckResult("FAIL", f"{(Path('skills') / skill_name / rel_path)!s} missing {snippet!r}"))
+
+    return checks
+
+
 def validate_command_artifacts(root: Path, validator: dict[str, Any]) -> list[CheckResult]:
     command = validator["command"]
     expected_files = validator.get("expected_files", [])
@@ -172,6 +198,8 @@ def validate_scenario(root: Path, skill_name: str, scenario: dict[str, Any]) -> 
         result.checks.extend(validate_script_output(root, validator))
     elif vtype == "skill-contract":
         result.checks.extend(validate_skill_contract(root, skill_name, validator))
+    elif vtype == "skill-structure":
+        result.checks.extend(validate_skill_structure(root, skill_name, validator))
     elif vtype == "command-artifacts":
         result.checks.extend(validate_command_artifacts(root, validator))
     else:

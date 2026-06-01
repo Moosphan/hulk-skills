@@ -44,6 +44,9 @@ from interview_core import (
 )
 from question_bank import load_question_bank, validate_question_bank, write_question_bank_validation_artifacts
 from tts_support import edge_tts_available
+from ai_client import AIClientError
+from ai_schemas import AIConfig
+from ai_services import InterviewAIServices
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,10 +66,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--round-persona-overrides", default="", help="Comma-separated round=persona overrides, e.g. round2=technical-deep-diver.")
     parser.add_argument("--round-language-overrides", default="", help="Comma-separated round=language overrides, e.g. round2=bilingual,hr=zh.")
     parser.add_argument("--question-target-overrides", default="", help="Comma-separated round=count overrides, e.g. round1=1,round2=2.")
+    parser.add_argument("--ai-mode", default="off", choices=["off", "assist", "required"], help="AI runtime mode. off isolates the deterministic fallback; assist uses AI with fallback; required fails if AI is unavailable.")
+    parser.add_argument("--ai-provider", default="auto", choices=["auto", "openai-compatible", "fixture", "none"], help="AI provider adapter.")
+    parser.add_argument("--model", default="", help="AI model name for provider-backed modes.")
+    parser.add_argument("--ai-timeout-seconds", type=int, default=45, help="Timeout for each AI call.")
+    parser.add_argument("--ai-cache-dir", default="", help="Reserved cache directory for AI calls.")
+    parser.add_argument("--ai-fixture-dir", default="", help="Fixture directory for provider=fixture.")
     return parser.parse_args()
 
 
-def evaluate_question_batch(question, answer_item, turn_index: int, persona_name: str, persona_dimensions: dict[str, int]) -> QuestionResult:
+def evaluate_question_batch(question, answer_item, turn_index: int, persona_name: str, persona_dimensions: dict[str, int], ai_services: InterviewAIServices) -> QuestionResult:
     answer = str(answer_item.get("answer", "")).strip()
     candidate_follow_ups = list(answer_item.get("follow_up_answers", []) or [])
     follow_up_chain: list[dict[str, str]] = []
@@ -75,8 +84,8 @@ def evaluate_question_batch(question, answer_item, turn_index: int, persona_name
         reply = candidate_follow_ups[idx] if idx < len(candidate_follow_ups) else ""
         follow_up_chain.append({"question": prompt, "answer": reply})
     follow_up_answers = [item["answer"] for item in follow_up_chain if item["answer"]]
-    score, confidence, strengths, risks, missing, question_alignment = score_answer(answer, follow_up_answers, question)
-    decision_result = decide_result(score, confidence, missing, risks, question.round)
+    score, confidence, strengths, risks, missing, question_alignment = ai_services.evaluate_answer(answer, follow_up_answers, question, score_answer)
+    decision_result = ai_services.decide_result(score, confidence, missing, risks, question.round, question_alignment, decide_result)
     return QuestionResult(
         id=question.id,
         title=question.title,
@@ -118,6 +127,15 @@ def main() -> int:
     session_id = build_session_id(args.session_id, answers.get("_meta", {}).get("candidate_name", "candidate"), "mvp")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    ai_config = AIConfig(
+        mode=args.ai_mode,
+        provider=args.ai_provider,
+        model=args.model,
+        timeout_seconds=args.ai_timeout_seconds,
+        cache_dir=args.ai_cache_dir,
+        fixture_dir=args.ai_fixture_dir,
+    )
+    ai_services = InterviewAIServices(ai_config, output_dir)
     all_questions = load_question_bank(args.question_bank)
     question_bank_validation = validate_question_bank(args.question_bank, all_questions)
     write_question_bank_validation_artifacts(output_dir, question_bank_validation)
@@ -152,22 +170,26 @@ def main() -> int:
     results = []
     for index, question in enumerate(selected_questions, start=1):
         persona = persona_by_round[question.round]
-        results.append(
-            evaluate_question_batch(
-                question,
-                answers.get(question.id, {}),
-                turn_index=index,
-                persona_name=persona.persona,
-                persona_dimensions={
-                    "pressure_level": persona.pressure_level,
-                    "guidance_level": persona.guidance_level,
-                    "skepticism_level": persona.skepticism_level,
-                    "depth_threshold": persona.depth_threshold,
-                    "business_focus": persona.business_focus,
-                    "leadership_focus": persona.leadership_focus,
-                },
+        try:
+            results.append(
+                evaluate_question_batch(
+                    question,
+                    answers.get(question.id, {}),
+                    turn_index=index,
+                    persona_name=persona.persona,
+                    persona_dimensions={
+                        "pressure_level": persona.pressure_level,
+                        "guidance_level": persona.guidance_level,
+                        "skepticism_level": persona.skepticism_level,
+                        "depth_threshold": persona.depth_threshold,
+                        "business_focus": persona.business_focus,
+                        "leadership_focus": persona.leadership_focus,
+                    },
+                    ai_services=ai_services,
+                )
             )
-        )
+        except AIClientError as exc:
+            raise SystemExit(f"AI runtime failed in required mode: {exc}") from exc
 
     round_summaries = build_round_summaries(results, args.level, interview_plan)
     round_scorecards = build_round_scorecards(results, round_summaries, interview_plan, args.level)
@@ -236,12 +258,15 @@ def main() -> int:
             "round_persona_overrides": round_persona_overrides,
             "round_language_overrides": round_language_overrides,
             "question_target_overrides": question_target_overrides,
+            **ai_services.metadata(),
         },
         question_bank_validation=question_bank_validation,
     )
     score_data = score_payload(results, hard_fail_flags, decision, round_summaries, round_scorecards, consistency_summary, round_deliberations)
+    score_data["ai_runtime"] = ai_services.metadata()
 
     write_json(output_dir / "session.json", session_data)
+    write_json(output_dir / "ai-runtime.json", ai_services.trace_payload())
     write_json(output_dir / "score.json", score_data)
     write_json(output_dir / "interview-plan.json", interview_plan)
     write_json(output_dir / "screening-summary.json", screening_summary)
