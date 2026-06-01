@@ -1,0 +1,7 @@
+interface:
+  display_name: "Android Interview"
+  short_description: "Run structured Android mock interviews with reports and TTS artifacts"
+  default_prompt: "Use this skill to simulate a structured Android interview from a JD and resume, score the candidate, and write local report artifacts."
+
+policy:
+  allow_implicit_invocation: true

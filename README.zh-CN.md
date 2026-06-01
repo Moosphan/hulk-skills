@@ -1,5 +1,5 @@
 [![平台](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.md)
-[![Skill 数量](https://img.shields.io/badge/Skills-2-green)](./README.md)
+[![Skill 数量](https://img.shields.io/badge/Skills-3-green)](./README.md)
 [![协议](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -10,7 +10,7 @@
 
 ## 项目亮点
 
-- 当前包含 2 个 skill：`word-counter` 和 `readme-generator`
+- 当前包含 3 个 skill：`word-counter`、`readme-generator` 和 `android-interview`
 - 覆盖 `Claude Code` 与 `Codex` 的真实场景验证
 - 可以构建两平台的可安装 skill 包
 - 已接入 GitHub Actions 校验与 GitHub Release 产物发布
@@ -47,6 +47,7 @@ hulk-skills/
 
 - `word-counter` - 用于中英文和混排文本的确定性字数统计
 - `readme-generator` - 用于基于仓库证据生成或重构 README
+- `android-interview` - 用于结构化 Android 模拟面试、本地报告与 TTS 语音产物生成
 
 ## 本地校验与构建
 

@@ -1,0 +1,61 @@
+{
+  "_meta": {
+    "candidate_name": "Alex Chen"
+  },
+  "intro-self-001": {
+    "answer": "I am a senior Android engineer with experience in large consumer apps, modularization, performance optimization, and cross-team delivery. My strongest project was leading the modularization and startup performance work for a super app where I owned architecture review, migration milestones, and release quality gates.",
+    "follow_up_answers": [
+      "I personally owned the Android module boundary design, startup optimization roadmap, and the release quality gate definition with QA and backend partners.",
+      "The project reduced cold start latency by 28 percent, lowered ANR rate, and improved release confidence through measurable rollout gates."
+    ]
+  },
+  "screening-auth-001": {
+    "answer": "I led the architecture review for our Android super app and owned the evaluation of startup, ANR, and release stability risks before we started the modularization program.",
+    "follow_up_answers": [
+      "My direct responsibility was aligning Android module boundaries and defining the migration milestones with backend and QA.",
+      "We measured startup latency, ANR rate, and crash free users before and after the first migration milestone."
+    ]
+  },
+  "round1-core-001": {
+    "answer": "For lifecycle-heavy features I always explain state transitions, background restrictions, and how we avoid leaking work across Activity recreation by moving state into ViewModel and clearly separating UI effects from persistent state.",
+    "follow_up_answers": [
+      "A common failure mode was duplicate requests after recreation, so I introduced idempotent events and lifecycle-aware collectors.",
+      "I used logs, traces, and targeted reproduction steps to confirm that the fix removed duplicate work."
+    ]
+  },
+  "round2-arch-001": {
+    "answer": "I designed the module boundaries by splitting startup-critical code from optional features, keeping dependency edges obvious, and moving risky initialization behind lazy gates. That let us protect cold start while we migrated gradually.",
+    "follow_up_answers": [
+      "The key tradeoff was keeping the architecture clean without turning the migration into a full rewrite, so I chose a phased boundary plan with explicit milestones.",
+      "We monitored startup latency, ANR, and crash free users on every rollout gate, and we kept a rollback switch ready if the signals moved the wrong way."
+    ]
+  },
+  "round2-perf-lite-001": {
+    "answer": "I found the startup bottleneck with trace data and then removed one expensive main-thread initialization path. That gave us a safer improvement without overengineering the whole app.",
+    "follow_up_answers": [
+      "The measurement that pointed us there was startup trace visibility on the critical path.",
+      "We protected the change with regression monitoring and a staged rollout."
+    ]
+  },
+  "round2-deep-dive-001": {
+    "answer": "I would defend the phased startup strategy because a rewrite would have delayed the release window and increased migration risk. The safer choice was to keep the critical path stable, then improve the rest through smaller checkpoints.",
+    "follow_up_answers": [
+      "I rejected the rewrite because it would have made rollback harder and introduced too many unknowns in one release.",
+      "If I restarted today, I would invest earlier in dependency visibility and migration dashboards so the phased plan would be even easier to steer."
+    ]
+  },
+  "round3-biz-001": {
+    "answer": "In one project we changed the Android technical plan because the business needed a faster regional launch. I kept the core architecture but reduced the initial scope, isolated risky integrations behind feature flags, and aligned product, backend, and QA on a phased delivery plan.",
+    "follow_up_answers": [
+      "The business constraint was a fixed market launch date tied to a campaign, so the cost of missing the window was higher than shipping every planned capability in the first release.",
+      "I kept engineering risk under control by cutting low-confidence scope, protecting critical paths with monitoring, and keeping a rollback strategy for the riskiest integrations."
+    ]
+  },
+  "hr-lead-001": {
+    "answer": "As a TL candidate I focus on team health, delivery clarity, and stakeholder alignment. In difficult situations I first clarify goals, identify the real constraint, and then align the team on a smaller plan we can execute without losing quality.",
+    "follow_up_answers": [
+      "One conflict happened when product pushed an aggressive delivery date, so I re-scoped the release and explained the risk tradeoff with concrete quality metrics.",
+      "The lesson was that early alignment on priorities prevents late-stage conflict and reduces churn."
+    ]
+  }
+}

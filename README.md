@@ -1,5 +1,5 @@
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.zh-CN.md)
-[![Skills](https://img.shields.io/badge/Skills-2-green)](./README.zh-CN.md)
+[![Skills](https://img.shields.io/badge/Skills-3-green)](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -10,7 +10,7 @@ English | [中文](./README.zh-CN.md)
 
 ## Highlights
 
-- 2 skills: `word-counter` and `readme-generator`
+- 3 skills: `word-counter`, `readme-generator`, and `android-interview`
 - Dual-platform scenario validation for `Claude Code` and `Codex`
 - Buildable install packages for both platforms
 - GitHub Release artifacts and CI validation
@@ -47,6 +47,7 @@ hulk-skills/
 
 - `word-counter` - deterministic Chinese / English / mixed text counting
 - `readme-generator` - evidence-first README generation and refactoring
+- `android-interview` - structured Android mock interviews with local reports and TTS artifacts
 
 ## Validation And Packaging
 

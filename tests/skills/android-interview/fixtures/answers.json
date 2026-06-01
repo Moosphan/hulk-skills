@@ -1,0 +1,75 @@
+{
+  "_meta": {
+    "candidate_name": "Alex Chen"
+  },
+  "intro-self-001": {
+    "answer": "I am a senior Android engineer with experience in large consumer apps, modularization, performance optimization, and cross-team delivery. My strongest project was leading the modularization and startup performance work for a super app where I owned architecture review, migration milestones, and release quality gates.",
+    "follow_up_answers": [
+      "I personally owned the Android module boundary design, startup optimization roadmap, and the release quality gate definition with QA and backend partners.",
+      "The project reduced cold start latency by 28 percent, lowered ANR rate, and improved release confidence through measurable rollout gates."
+    ]
+  },
+  "screening-auth-001": {
+    "answer": "I led the architecture review for our Android super app and owned the evaluation of startup, ANR, and release stability risks before we started the modularization program.",
+    "follow_up_answers": [
+      "My direct responsibility was aligning Android module boundaries and defining the migration milestones with backend and QA.",
+      "We measured startup latency, ANR rate, and crash free users before and after the first migration milestone."
+    ]
+  },
+  "round1-core-001": {
+    "answer": "For lifecycle-heavy features I always explain state transitions, background restrictions, and how we avoid leaking work across Activity recreation by moving state into ViewModel and clearly separating UI effects from persistent state.",
+    "follow_up_answers": [
+      "A common failure mode was duplicate requests after recreation, so I introduced idempotent events and lifecycle-aware collectors.",
+      "I used logs, traces, and targeted reproduction steps to confirm that the fix removed duplicate work."
+    ]
+  },
+  "generated-round1-implementation-detail-002": {
+    "answer": "One concrete implementation detail I owned was building a lifecycle-safe event pipeline for a payment feature. I separated durable screen state from one-off UI effects, added idempotent request keys, and explicitly modeled edge cases like process recreation and duplicated intents.",
+    "follow_up_answers": [
+      "The easiest edge case to get wrong was duplicated payment submission after Activity recreation, because the same intent could be replayed if we treated it like persistent state.",
+      "We validated it with targeted regression cases, replay logs, and release monitoring on duplicate submission rate before full rollout."
+    ]
+  },
+  "round2-perf-001": {
+    "answer": "I owned cold start optimization for a large Android application. We used startup tracing, baseline metrics, and macrobenchmark results to identify the critical path. We reduced cold start time by 28% and protected the result with regression dashboards and release gates because startup was one of our most visible product metrics.",
+    "follow_up_answers": [
+      "The biggest ROI came from lazy initialization, removing main-thread disk access, and precomputing dependency graphs for core modules.",
+      "We kept a rollback switch and monitored the startup p50, p90, ANR, and crash rate after rollout."
+    ]
+  },
+  "generated-round2-tradeoff-reasoning-002": {
+    "answer": "A major tradeoff I made was choosing staged modularization instead of a full rewrite. The full rewrite looked cleaner, but it would have delayed delivery and increased regression risk, so I chose an incremental path with clear module boundaries, migration checkpoints, and rollback gates.",
+    "follow_up_answers": [
+      "If I did it again today I would still take the incremental path, but I would invest earlier in dependency visibility tooling because it would reduce migration surprises.",
+      "We controlled the risk with milestone reviews, startup and ANR dashboards, and the ability to stop rollout if crash or latency thresholds moved."
+    ]
+  },
+  "round3-biz-001": {
+    "answer": "In one project we changed the Android technical plan because the business needed a faster regional launch. I kept the core architecture but reduced the initial scope, isolated risky integrations behind feature flags, and aligned product, backend, and QA on a phased delivery plan.",
+    "follow_up_answers": [
+      "The business constraint was a fixed market launch date tied to a campaign, so the cost of missing the window was higher than shipping every planned capability in the first release.",
+      "I kept engineering risk under control by cutting low-confidence scope, protecting critical paths with monitoring, and keeping a rollback strategy for the riskiest integrations."
+    ]
+  },
+  "generated-round3-technical-influence-002": {
+    "answer": "I once changed the team direction by arguing against a quick but fragile startup optimization that would have hidden technical debt. I used trace data, failure scenarios, and rollout risk analysis to show that a more disciplined dependency cleanup would deliver the same metric gain with better long-term stability.",
+    "follow_up_answers": [
+      "People disagreed at first because the quick fix looked cheaper and the delivery date was tight.",
+      "The team aligned after I showed the regression risk, proposed a smaller phased plan, and committed to measurable checkpoints the team could trust."
+    ]
+  },
+  "hr-lead-001": {
+    "answer": "As a TL candidate I focus on team health, delivery clarity, and stakeholder alignment. In difficult situations I first clarify goals, identify the real constraint, and then align the team on a smaller plan we can execute without losing quality.",
+    "follow_up_answers": [
+      "One conflict happened when product pushed an aggressive delivery date, so I re-scoped the release and explained the risk tradeoff with concrete quality metrics.",
+      "The lesson was that early alignment on priorities prevents late-stage conflict and reduces churn."
+    ]
+  },
+  "generated-hr-motivation-002": {
+    "answer": "If I joined this role, the top things I would care about are problem depth, technical ownership, and whether the team can make quality tradeoffs responsibly. I would step back if the role looked like pure execution without room for engineering judgment, or if the team repeatedly ignored quality signals just to hit dates.",
+    "follow_up_answers": [
+      "I judge long-term fit by whether leaders are honest about constraints, whether engineers can influence decisions, and whether the team learns from failures instead of hiding them.",
+      "The capability I most want to strengthen next is larger-scope technical influence, especially driving cross-team architecture decisions without slowing delivery."
+    ]
+  }
+}

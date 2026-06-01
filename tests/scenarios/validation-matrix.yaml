@@ -89,3 +89,986 @@ skills:
         - preserves_repo_facts: true
         - reduces_noise: true
         - keeps_minimal_structure: true
+  android-interview:
+    - name: mvp_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-mvp-session.md
+      input: "Run an immersive-English Android interview session with TTS enabled."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_mvp_demo.py
+          - --output-dir
+          - dist/interview-reports/validation-claude-code
+          - --session-id
+          - validation-claude-code
+          - --enable-tts
+        expected_contains:
+          - "session_id=validation-claude-code"
+          - "decision=pass"
+          - "tts_status=generated"
+        expected_files:
+          - dist/interview-reports/validation-claude-code/session.json
+          - dist/interview-reports/validation-claude-code/screening-summary.json
+          - dist/interview-reports/validation-claude-code/screening-summary.md
+          - dist/interview-reports/validation-claude-code/resume-prep.json
+          - dist/interview-reports/validation-claude-code/resume-prep.md
+          - dist/interview-reports/validation-claude-code/question-bank-validation.json
+          - dist/interview-reports/validation-claude-code/question-bank-validation.md
+          - dist/interview-reports/validation-claude-code/score.json
+          - dist/interview-reports/validation-claude-code/interview-plan.json
+          - dist/interview-reports/validation-claude-code/transcript.md
+          - dist/interview-reports/validation-claude-code/report.html
+          - dist/interview-reports/validation-claude-code/pass-summary.md
+          - dist/interview-reports/validation-claude-code/tts/opening.mp3
+          - dist/interview-reports/validation-claude-code/tts/questions.mp3
+          - dist/interview-reports/validation-claude-code/tts/summary.mp3
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code/score.json:
+            - '"question_count": 9'
+            - '"round3-biz-001"'
+            - '"generated-round2-tradeoff-reasoning-002"'
+            - '"question_bank_alignment"'
+          dist/interview-reports/validation-claude-code/session.json:
+            - '"screening_summary"'
+            - '"consistency_summary"'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-claude-code/report.html:
+            - 'Screening Snapshot'
+            - 'Resume Prep Brief'
+            - 'Question Bank Validation'
+            - 'Follow-up chain'
+            - 'Consistency Review'
+            - 'Question bank alignment'
+      acceptance:
+        - writes_local_artifacts: true
+        - generates_tts_audio: true
+        - keeps_evidence_based_scoring: true
+    - name: interactive_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-session.md
+      input: "Run a real turn-by-turn Android interview session with structured stage events and local artifacts."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-interactive
+          - --session-id
+          - validation-claude-code-interactive
+        expected_contains:
+          - "session_id=validation-claude-code-interactive"
+          - "decision=pass"
+          - "turn_count="
+        expected_files:
+          - dist/interview-reports/validation-claude-code-interactive/session.json
+          - dist/interview-reports/validation-claude-code-interactive/screening-summary.json
+          - dist/interview-reports/validation-claude-code-interactive/screening-summary.md
+          - dist/interview-reports/validation-claude-code-interactive/resume-prep.json
+          - dist/interview-reports/validation-claude-code-interactive/resume-prep.md
+          - dist/interview-reports/validation-claude-code-interactive/question-bank-validation.json
+          - dist/interview-reports/validation-claude-code-interactive/question-bank-validation.md
+          - dist/interview-reports/validation-claude-code-interactive/session-progress.json
+          - dist/interview-reports/validation-claude-code-interactive/score.json
+          - dist/interview-reports/validation-claude-code-interactive/interview-plan.json
+          - dist/interview-reports/validation-claude-code-interactive/turn-events.json
+          - dist/interview-reports/validation-claude-code-interactive/transcript.md
+          - dist/interview-reports/validation-claude-code-interactive/report.html
+          - dist/interview-reports/validation-claude-code-interactive/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-interactive/turn-events.json:
+            - '"stage": "intro"'
+            - '"stage": "feedback"'
+            - '"stage": "summary"'
+            - '"stage": "deliberation"'
+            - '"stage": "handoff_route"'
+            - '"stage": "advance"'
+            - '"stage": "switch_topic"'
+          dist/interview-reports/validation-claude-code-interactive/session.json:
+            - '"interactive_mode": true'
+            - '"round_summaries"'
+            - '"round_deliberations"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-claude-code-interactive/report.html:
+            - 'Screening Snapshot'
+            - 'Resume Prep Brief'
+            - 'Question Bank Validation'
+            - 'Follow-up chain'
+            - 'Round Deliberations'
+            - 'Consistency Review'
+            - 'Question bank alignment'
+          dist/interview-reports/validation-claude-code-interactive/session-progress.json:
+            - '"latest_question_feedback"'
+            - '"round_deliberations"'
+            - '"session_status": "completed"'
+          dist/interview-reports/validation-claude-code-interactive/score.json:
+            - '"question_count": 10'
+            - '"round3-biz-001"'
+            - '"generated-round3-technical-influence-002"'
+            - '"question_bank_alignment"'
+      acceptance:
+        - writes_local_artifacts: true
+        - includes_stage_events: true
+        - keeps_round_level_decisions: true
+    - name: question_bank_validation
+      platform: claude-code
+      scenario_file: android-interview/claude-code-question-bank-validation.md
+      input: "Validate an external Markdown interview question bank before using it in a live interview."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/validate_question_bank.py
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-question-bank
+        expected_contains:
+          - "question_bank_status=valid"
+          - "error_count=0"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-question-bank/question-bank-validation.json
+          - dist/interview-reports/validation-claude-code-question-bank/question-bank-validation.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-question-bank/question-bank-validation.json:
+            - '"status": "valid"'
+            - '"question_count": 5'
+          dist/interview-reports/validation-claude-code-question-bank/question-bank-validation.md:
+            - 'Question Bank Validation'
+            - 'Round Coverage'
+      acceptance:
+        - validates_external_markdown_banks: true
+        - writes_auditable_bank_validation_artifacts: true
+    - name: interactive_resume_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-resume-session.md
+      input: "Pause a real turn-by-turn Android interview, resume from checkpoint, and complete the full session."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_resume_demo.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-resume
+          - --session-id
+          - validation-claude-code-resume
+          - --pause-after-questions
+          - "3"
+        expected_contains:
+          - "decision=paused"
+          - "decision=pass"
+          - "resumed=true"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-resume/session.json
+          - dist/interview-reports/validation-claude-code-resume/screening-summary.json
+          - dist/interview-reports/validation-claude-code-resume/screening-summary.md
+          - dist/interview-reports/validation-claude-code-resume/session-progress.json
+          - dist/interview-reports/validation-claude-code-resume/score.json
+          - dist/interview-reports/validation-claude-code-resume/interview-plan.json
+          - dist/interview-reports/validation-claude-code-resume/turn-events.json
+          - dist/interview-reports/validation-claude-code-resume/report.html
+          - dist/interview-reports/validation-claude-code-resume/session-checkpoint.json
+          - dist/interview-reports/validation-claude-code-resume/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-resume/session.json:
+            - '"resume_context"'
+            - '"resumed": true'
+            - '"previous_checkpoint_status": "paused"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-claude-code-resume/session-progress.json:
+            - '"latest_question_feedback"'
+            - '"current_decision": "pass"'
+          dist/interview-reports/validation-claude-code-resume/score.json:
+            - '"final_decision": "pass"'
+            - '"question_count": 10'
+          dist/interview-reports/validation-claude-code-resume/session-checkpoint.json:
+            - '"checkpoint_status": "completed"'
+            - '"checkpoint_reason": "pass"'
+      acceptance:
+        - writes_resumable_checkpoint: true
+        - resumes_without_restarting: true
+        - preserves_final_report_artifacts: true
+    - name: interactive_custom_config_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-custom-config-session.md
+      input: "Run the Android interview with custom persona, per-round language, and question target overrides."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-custom
+          - --session-id
+          - validation-claude-code-custom
+          - --default-persona
+          - technical-deep-diver
+          - --round-persona-overrides
+          - round2=business-outcome,hr=leadership-evaluator
+          - --round-language-overrides
+          - round2=bilingual,hr=zh
+          - --question-target-overrides
+          - round1=1,round2=1,round3=1,hr=1
+        expected_contains:
+          - "session_id=validation-claude-code-custom"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-custom/session.json
+          - dist/interview-reports/validation-claude-code-custom/screening-summary.json
+          - dist/interview-reports/validation-claude-code-custom/screening-summary.md
+          - dist/interview-reports/validation-claude-code-custom/score.json
+          - dist/interview-reports/validation-claude-code-custom/interview-plan.json
+          - dist/interview-reports/validation-claude-code-custom/turn-events.json
+          - dist/interview-reports/validation-claude-code-custom/report.html
+          - dist/interview-reports/validation-claude-code-custom/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-custom/session.json:
+            - '"default_persona": "技术深挖型"'
+            - '"round2": "业务结果型"'
+            - '"round2": "bilingual"'
+            - '"hr": "zh"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-claude-code-custom/interview-plan.json:
+            - '"question_target": 1'
+            - '"language_mode": "bilingual"'
+            - '"language_mode": "zh"'
+          dist/interview-reports/validation-claude-code-custom/turn-events.json:
+            - 'If needed I can briefly clarify in Chinese, but please keep your core answer in English.'
+            - '接下来进入 HR Interview。当前面试官风格为“领导力评估型”。'
+          dist/interview-reports/validation-claude-code-custom/report.html:
+            - 'language=bilingual'
+            - 'language=zh'
+          dist/interview-reports/validation-claude-code-custom/score.json:
+            - '"question_count": 6'
+      acceptance:
+        - supports_custom_persona_configuration: true
+        - supports_round_language_overrides: true
+        - supports_custom_question_targets: true
+    - name: interactive_consistency_challenge_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-consistency-challenge-session.md
+      input: "Run the Android interview with a scripted contradiction so the interviewer must challenge cross-question inconsistency during the session."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-consistency.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-consistency
+          - --session-id
+          - validation-claude-code-consistency
+        expected_contains:
+          - "session_id=validation-claude-code-consistency"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-consistency/session.json
+          - dist/interview-reports/validation-claude-code-consistency/session-progress.json
+          - dist/interview-reports/validation-claude-code-consistency/score.json
+          - dist/interview-reports/validation-claude-code-consistency/turn-events.json
+          - dist/interview-reports/validation-claude-code-consistency/report.html
+          - dist/interview-reports/validation-claude-code-consistency/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-consistency/turn-events.json:
+            - '"stage": "consistency_challenge"'
+            - '"ownership_consistency"'
+            - '"round2-perf-001"'
+          dist/interview-reports/validation-claude-code-consistency/session.json:
+            - '"interactive_mode": true'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-claude-code-consistency/report.html:
+            - 'Consistency Challenges'
+            - 'ownership_consistency'
+          dist/interview-reports/validation-claude-code-consistency/score.json:
+            - '"question_count": 10'
+            - '"consistency_summary"'
+      acceptance:
+        - challenges_cross_question_contradictions: true
+        - records_runtime_consistency_events: true
+    - name: interactive_adaptive_routing_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-adaptive-routing-session.md
+      input: "Run the Android interview with adaptive runtime routing so the next question can be promoted or reordered within the same round."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank-adaptive
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-adaptive.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-adaptive
+          - --session-id
+          - validation-claude-code-adaptive
+          - --adaptive-runtime-routing
+          - --question-target-overrides
+          - round1=1,round2=3,round3=1,hr=1
+        expected_contains:
+          - "session_id=validation-claude-code-adaptive"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-adaptive/session.json
+          - dist/interview-reports/validation-claude-code-adaptive/score.json
+          - dist/interview-reports/validation-claude-code-adaptive/turn-events.json
+          - dist/interview-reports/validation-claude-code-adaptive/report.html
+          - dist/interview-reports/validation-claude-code-adaptive/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-adaptive/session.json:
+            - '"adaptive_runtime_routing": true'
+          dist/interview-reports/validation-claude-code-adaptive/turn-events.json:
+            - '"stage": "adaptive_route"'
+            - '"round2-deep-dive-001"'
+          dist/interview-reports/validation-claude-code-adaptive/report.html:
+            - 'Adaptive Routing'
+            - 'round2-deep-dive-001'
+          dist/interview-reports/validation-claude-code-adaptive/score.json:
+            - '"question_count": 8'
+            - '"question_bank_alignment"'
+      acceptance:
+        - supports_runtime_question_reordering: true
+        - keeps_adaptive_routing_auditable: true
+    - name: interactive_deliberation_bridge_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-deliberation-bridge-session.md
+      input: "Run the Android interview with deliberation bridge probes so a technical round can be held for one more targeted probe before advancing."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-consistency.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-deliberation-bridge
+          - --session-id
+          - validation-claude-code-deliberation-bridge
+          - --mode
+          - round2
+          - --question-target-overrides
+          - round2=1
+          - --deliberation-bridge-probes
+        expected_contains:
+          - "session_id=validation-claude-code-deliberation-bridge"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/session.json
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/panel-notes.json
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/panel-notes.md
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/score.json
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/turn-events.json
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/report.html
+          - dist/interview-reports/validation-claude-code-deliberation-bridge/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-deliberation-bridge/turn-events.json:
+            - '"stage": "hold"'
+            - '"stage": "round_transition"'
+          dist/interview-reports/validation-claude-code-deliberation-bridge/report.html:
+            - 'Round Holds'
+            - 'Round Transitions'
+            - 'generated-round2-tradeoff-reasoning-002'
+          dist/interview-reports/validation-claude-code-deliberation-bridge/panel-notes.md:
+            - 'Panel Notes'
+            - 'round2'
+          dist/interview-reports/validation-claude-code-deliberation-bridge/score.json:
+            - '"question_count": 3'
+            - '"question_bank_alignment"'
+        acceptance:
+          - holds_round_for_targeted_probe: true
+          - records_transition_strategy_between_rounds: true
+    - name: interactive_fail_session
+      platform: claude-code
+      scenario_file: android-interview/claude-code-interactive-fail-session.md
+      input: "Run a weak-answer Android interview session that terminates early and writes failure artifacts."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-fail.json
+          - --output-dir
+          - dist/interview-reports/validation-claude-code-fail
+          - --session-id
+          - validation-claude-code-fail
+        expected_contains:
+          - "session_id=validation-claude-code-fail"
+          - "decision=fail"
+        expected_files:
+          - dist/interview-reports/validation-claude-code-fail/session.json
+          - dist/interview-reports/validation-claude-code-fail/screening-summary.json
+          - dist/interview-reports/validation-claude-code-fail/screening-summary.md
+          - dist/interview-reports/validation-claude-code-fail/session-progress.json
+          - dist/interview-reports/validation-claude-code-fail/score.json
+          - dist/interview-reports/validation-claude-code-fail/interview-plan.json
+          - dist/interview-reports/validation-claude-code-fail/turn-events.json
+          - dist/interview-reports/validation-claude-code-fail/transcript.md
+          - dist/interview-reports/validation-claude-code-fail/report.html
+          - dist/interview-reports/validation-claude-code-fail/mail-reject.html
+          - dist/interview-reports/validation-claude-code-fail/fail-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-claude-code-fail/session.json:
+            - '"session_status": "session_terminated"'
+            - '"terminated_early": true'
+            - '"generated-round2-tradeoff-reasoning-002"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-claude-code-fail/session-progress.json:
+            - '"session_status": "session_terminated"'
+            - '"current_decision": "fail"'
+          dist/interview-reports/validation-claude-code-fail/score.json:
+            - '"final_decision": "fail"'
+            - '"round2-perf-001"'
+          dist/interview-reports/validation-claude-code-fail/fail-summary.md:
+            - 'Interview Failure Summary'
+            - 'Improvement Suggestions'
+      acceptance:
+        - terminates_early: true
+        - writes_failure_artifacts: true
+    - name: mvp_session
+      platform: codex
+      scenario_file: android-interview/codex-mvp-session.md
+      input: "Run an immersive-English Android interview session with TTS enabled."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_mvp_demo.py
+          - --output-dir
+          - dist/interview-reports/validation-codex
+          - --session-id
+          - validation-codex
+          - --enable-tts
+        expected_contains:
+          - "session_id=validation-codex"
+          - "decision=pass"
+          - "tts_status=generated"
+        expected_files:
+          - dist/interview-reports/validation-codex/session.json
+          - dist/interview-reports/validation-codex/screening-summary.json
+          - dist/interview-reports/validation-codex/screening-summary.md
+          - dist/interview-reports/validation-codex/resume-prep.json
+          - dist/interview-reports/validation-codex/resume-prep.md
+          - dist/interview-reports/validation-codex/question-bank-validation.json
+          - dist/interview-reports/validation-codex/question-bank-validation.md
+          - dist/interview-reports/validation-codex/score.json
+          - dist/interview-reports/validation-codex/interview-plan.json
+          - dist/interview-reports/validation-codex/transcript.md
+          - dist/interview-reports/validation-codex/report.html
+          - dist/interview-reports/validation-codex/pass-summary.md
+          - dist/interview-reports/validation-codex/tts/opening.mp3
+          - dist/interview-reports/validation-codex/tts/questions.mp3
+          - dist/interview-reports/validation-codex/tts/summary.mp3
+        expected_file_contains:
+          dist/interview-reports/validation-codex/score.json:
+            - '"question_count": 9'
+            - '"round3-biz-001"'
+            - '"generated-round2-tradeoff-reasoning-002"'
+            - '"question_bank_alignment"'
+          dist/interview-reports/validation-codex/session.json:
+            - '"screening_summary"'
+            - '"consistency_summary"'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-codex/report.html:
+            - 'Screening Snapshot'
+            - 'Resume Prep Brief'
+            - 'Question Bank Validation'
+            - 'Follow-up chain'
+            - 'Consistency Review'
+            - 'Question bank alignment'
+      acceptance:
+        - writes_local_artifacts: true
+        - generates_tts_audio: true
+        - keeps_evidence_based_scoring: true
+    - name: interactive_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-session.md
+      input: "Run a real turn-by-turn Android interview session with structured stage events and local artifacts."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-interactive
+          - --session-id
+          - validation-codex-interactive
+        expected_contains:
+          - "session_id=validation-codex-interactive"
+          - "decision=pass"
+          - "turn_count="
+        expected_files:
+          - dist/interview-reports/validation-codex-interactive/session.json
+          - dist/interview-reports/validation-codex-interactive/screening-summary.json
+          - dist/interview-reports/validation-codex-interactive/screening-summary.md
+          - dist/interview-reports/validation-codex-interactive/resume-prep.json
+          - dist/interview-reports/validation-codex-interactive/resume-prep.md
+          - dist/interview-reports/validation-codex-interactive/question-bank-validation.json
+          - dist/interview-reports/validation-codex-interactive/question-bank-validation.md
+          - dist/interview-reports/validation-codex-interactive/session-progress.json
+          - dist/interview-reports/validation-codex-interactive/score.json
+          - dist/interview-reports/validation-codex-interactive/interview-plan.json
+          - dist/interview-reports/validation-codex-interactive/turn-events.json
+          - dist/interview-reports/validation-codex-interactive/transcript.md
+          - dist/interview-reports/validation-codex-interactive/report.html
+          - dist/interview-reports/validation-codex-interactive/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-interactive/turn-events.json:
+            - '"stage": "intro"'
+            - '"stage": "feedback"'
+            - '"stage": "summary"'
+            - '"stage": "deliberation"'
+            - '"stage": "handoff_route"'
+            - '"stage": "advance"'
+            - '"stage": "switch_topic"'
+          dist/interview-reports/validation-codex-interactive/session.json:
+            - '"interactive_mode": true'
+            - '"round_summaries"'
+            - '"round_deliberations"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+            - '"question_bank_validation"'
+            - '"resume_prep"'
+          dist/interview-reports/validation-codex-interactive/report.html:
+            - 'Screening Snapshot'
+            - 'Resume Prep Brief'
+            - 'Question Bank Validation'
+            - 'Follow-up chain'
+            - 'Round Deliberations'
+            - 'Consistency Review'
+            - 'Question bank alignment'
+          dist/interview-reports/validation-codex-interactive/session-progress.json:
+            - '"latest_question_feedback"'
+            - '"round_deliberations"'
+            - '"session_status": "completed"'
+          dist/interview-reports/validation-codex-interactive/score.json:
+            - '"question_count": 10'
+            - '"round3-biz-001"'
+            - '"generated-round3-technical-influence-002"'
+            - '"question_bank_alignment"'
+      acceptance:
+        - writes_local_artifacts: true
+        - includes_stage_events: true
+        - keeps_round_level_decisions: true
+    - name: question_bank_validation
+      platform: codex
+      scenario_file: android-interview/codex-question-bank-validation.md
+      input: "Validate an external Markdown interview question bank before using it in a live interview."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/validate_question_bank.py
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --output-dir
+          - dist/interview-reports/validation-codex-question-bank
+        expected_contains:
+          - "question_bank_status=valid"
+          - "error_count=0"
+        expected_files:
+          - dist/interview-reports/validation-codex-question-bank/question-bank-validation.json
+          - dist/interview-reports/validation-codex-question-bank/question-bank-validation.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-question-bank/question-bank-validation.json:
+            - '"status": "valid"'
+            - '"question_count": 5'
+          dist/interview-reports/validation-codex-question-bank/question-bank-validation.md:
+            - 'Question Bank Validation'
+            - 'Round Coverage'
+      acceptance:
+        - validates_external_markdown_banks: true
+        - writes_auditable_bank_validation_artifacts: true
+    - name: interactive_resume_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-resume-session.md
+      input: "Pause a real turn-by-turn Android interview, resume from checkpoint, and complete the full session."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_resume_demo.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-resume
+          - --session-id
+          - validation-codex-resume
+          - --pause-after-questions
+          - "3"
+        expected_contains:
+          - "decision=paused"
+          - "decision=pass"
+          - "resumed=true"
+        expected_files:
+          - dist/interview-reports/validation-codex-resume/session.json
+          - dist/interview-reports/validation-codex-resume/screening-summary.json
+          - dist/interview-reports/validation-codex-resume/screening-summary.md
+          - dist/interview-reports/validation-codex-resume/session-progress.json
+          - dist/interview-reports/validation-codex-resume/score.json
+          - dist/interview-reports/validation-codex-resume/interview-plan.json
+          - dist/interview-reports/validation-codex-resume/turn-events.json
+          - dist/interview-reports/validation-codex-resume/report.html
+          - dist/interview-reports/validation-codex-resume/session-checkpoint.json
+          - dist/interview-reports/validation-codex-resume/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-resume/session.json:
+            - '"resume_context"'
+            - '"resumed": true'
+            - '"previous_checkpoint_status": "paused"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-codex-resume/session-progress.json:
+            - '"latest_question_feedback"'
+            - '"current_decision": "pass"'
+          dist/interview-reports/validation-codex-resume/score.json:
+            - '"final_decision": "pass"'
+            - '"question_count": 10'
+          dist/interview-reports/validation-codex-resume/session-checkpoint.json:
+            - '"checkpoint_status": "completed"'
+            - '"checkpoint_reason": "pass"'
+      acceptance:
+        - writes_resumable_checkpoint: true
+        - resumes_without_restarting: true
+        - preserves_final_report_artifacts: true
+    - name: interactive_custom_config_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-custom-config-session.md
+      input: "Run the Android interview with custom persona, per-round language, and question target overrides."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-custom
+          - --session-id
+          - validation-codex-custom
+          - --default-persona
+          - technical-deep-diver
+          - --round-persona-overrides
+          - round2=business-outcome,hr=leadership-evaluator
+          - --round-language-overrides
+          - round2=bilingual,hr=zh
+          - --question-target-overrides
+          - round1=1,round2=1,round3=1,hr=1
+        expected_contains:
+          - "session_id=validation-codex-custom"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-codex-custom/session.json
+          - dist/interview-reports/validation-codex-custom/screening-summary.json
+          - dist/interview-reports/validation-codex-custom/screening-summary.md
+          - dist/interview-reports/validation-codex-custom/score.json
+          - dist/interview-reports/validation-codex-custom/interview-plan.json
+          - dist/interview-reports/validation-codex-custom/turn-events.json
+          - dist/interview-reports/validation-codex-custom/report.html
+          - dist/interview-reports/validation-codex-custom/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-custom/session.json:
+            - '"default_persona": "技术深挖型"'
+            - '"round2": "业务结果型"'
+            - '"round2": "bilingual"'
+            - '"hr": "zh"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-codex-custom/interview-plan.json:
+            - '"question_target": 1'
+            - '"language_mode": "bilingual"'
+            - '"language_mode": "zh"'
+          dist/interview-reports/validation-codex-custom/turn-events.json:
+            - 'If needed I can briefly clarify in Chinese, but please keep your core answer in English.'
+            - '接下来进入 HR Interview。当前面试官风格为“领导力评估型”。'
+          dist/interview-reports/validation-codex-custom/report.html:
+            - 'language=bilingual'
+            - 'language=zh'
+          dist/interview-reports/validation-codex-custom/score.json:
+            - '"question_count": 6'
+      acceptance:
+        - supports_custom_persona_configuration: true
+        - supports_round_language_overrides: true
+        - supports_custom_question_targets: true
+    - name: interactive_consistency_challenge_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-consistency-challenge-session.md
+      input: "Run the Android interview with a scripted contradiction so the interviewer must challenge cross-question inconsistency during the session."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-consistency.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-consistency
+          - --session-id
+          - validation-codex-consistency
+        expected_contains:
+          - "session_id=validation-codex-consistency"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-codex-consistency/session.json
+          - dist/interview-reports/validation-codex-consistency/session-progress.json
+          - dist/interview-reports/validation-codex-consistency/score.json
+          - dist/interview-reports/validation-codex-consistency/turn-events.json
+          - dist/interview-reports/validation-codex-consistency/report.html
+          - dist/interview-reports/validation-codex-consistency/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-consistency/turn-events.json:
+            - '"stage": "consistency_challenge"'
+            - '"ownership_consistency"'
+            - '"round2-perf-001"'
+          dist/interview-reports/validation-codex-consistency/session.json:
+            - '"interactive_mode": true'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-codex-consistency/report.html:
+            - 'Consistency Challenges'
+            - 'ownership_consistency'
+          dist/interview-reports/validation-codex-consistency/score.json:
+            - '"question_count": 10'
+            - '"consistency_summary"'
+      acceptance:
+        - challenges_cross_question_contradictions: true
+        - records_runtime_consistency_events: true
+    - name: interactive_adaptive_routing_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-adaptive-routing-session.md
+      input: "Run the Android interview with adaptive runtime routing so the next question can be promoted or reordered within the same round."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank-adaptive
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-adaptive.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-adaptive
+          - --session-id
+          - validation-codex-adaptive
+          - --adaptive-runtime-routing
+          - --question-target-overrides
+          - round1=1,round2=3,round3=1,hr=1
+        expected_contains:
+          - "session_id=validation-codex-adaptive"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-codex-adaptive/session.json
+          - dist/interview-reports/validation-codex-adaptive/score.json
+          - dist/interview-reports/validation-codex-adaptive/turn-events.json
+          - dist/interview-reports/validation-codex-adaptive/report.html
+          - dist/interview-reports/validation-codex-adaptive/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-adaptive/session.json:
+            - '"adaptive_runtime_routing": true'
+          dist/interview-reports/validation-codex-adaptive/turn-events.json:
+            - '"stage": "adaptive_route"'
+            - '"round2-deep-dive-001"'
+          dist/interview-reports/validation-codex-adaptive/report.html:
+            - 'Adaptive Routing'
+            - 'round2-deep-dive-001'
+          dist/interview-reports/validation-codex-adaptive/score.json:
+            - '"question_count": 8'
+            - '"question_bank_alignment"'
+      acceptance:
+        - supports_runtime_question_reordering: true
+        - keeps_adaptive_routing_auditable: true
+    - name: interactive_deliberation_bridge_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-deliberation-bridge-session.md
+      input: "Run the Android interview with deliberation bridge probes so a technical round can be held for one more targeted probe before advancing."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-consistency.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-deliberation-bridge
+          - --session-id
+          - validation-codex-deliberation-bridge
+          - --mode
+          - round2
+          - --question-target-overrides
+          - round2=1
+          - --deliberation-bridge-probes
+        expected_contains:
+          - "session_id=validation-codex-deliberation-bridge"
+          - "decision=pass"
+        expected_files:
+          - dist/interview-reports/validation-codex-deliberation-bridge/session.json
+          - dist/interview-reports/validation-codex-deliberation-bridge/panel-notes.json
+          - dist/interview-reports/validation-codex-deliberation-bridge/panel-notes.md
+          - dist/interview-reports/validation-codex-deliberation-bridge/score.json
+          - dist/interview-reports/validation-codex-deliberation-bridge/turn-events.json
+          - dist/interview-reports/validation-codex-deliberation-bridge/report.html
+          - dist/interview-reports/validation-codex-deliberation-bridge/pass-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-deliberation-bridge/turn-events.json:
+            - '"stage": "hold"'
+            - '"stage": "round_transition"'
+          dist/interview-reports/validation-codex-deliberation-bridge/report.html:
+            - 'Round Holds'
+            - 'Round Transitions'
+            - 'generated-round2-tradeoff-reasoning-002'
+          dist/interview-reports/validation-codex-deliberation-bridge/panel-notes.md:
+            - 'Panel Notes'
+            - 'round2'
+          dist/interview-reports/validation-codex-deliberation-bridge/score.json:
+            - '"question_count": 3'
+            - '"question_bank_alignment"'
+        acceptance:
+          - holds_round_for_targeted_probe: true
+          - records_transition_strategy_between_rounds: true
+    - name: interactive_fail_session
+      platform: codex
+      scenario_file: android-interview/codex-interactive-fail-session.md
+      input: "Run a weak-answer Android interview session that terminates early and writes failure artifacts."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - skills/android-interview/scripts/run_interactive_session.py
+          - --jd
+          - tests/skills/android-interview/fixtures/jd.md
+          - --resume
+          - tests/skills/android-interview/fixtures/resume.md
+          - --question-bank
+          - tests/skills/android-interview/fixtures/question-bank
+          - --scripted-answers
+          - tests/skills/android-interview/fixtures/answers-fail.json
+          - --output-dir
+          - dist/interview-reports/validation-codex-fail
+          - --session-id
+          - validation-codex-fail
+        expected_contains:
+          - "session_id=validation-codex-fail"
+          - "decision=fail"
+        expected_files:
+          - dist/interview-reports/validation-codex-fail/session.json
+          - dist/interview-reports/validation-codex-fail/screening-summary.json
+          - dist/interview-reports/validation-codex-fail/screening-summary.md
+          - dist/interview-reports/validation-codex-fail/session-progress.json
+          - dist/interview-reports/validation-codex-fail/score.json
+          - dist/interview-reports/validation-codex-fail/interview-plan.json
+          - dist/interview-reports/validation-codex-fail/turn-events.json
+          - dist/interview-reports/validation-codex-fail/transcript.md
+          - dist/interview-reports/validation-codex-fail/report.html
+          - dist/interview-reports/validation-codex-fail/mail-reject.html
+          - dist/interview-reports/validation-codex-fail/fail-summary.md
+        expected_file_contains:
+          dist/interview-reports/validation-codex-fail/session.json:
+            - '"session_status": "session_terminated"'
+            - '"terminated_early": true'
+            - '"generated-round2-tradeoff-reasoning-002"'
+            - '"screening_summary"'
+            - '"consistency_summary"'
+          dist/interview-reports/validation-codex-fail/session-progress.json:
+            - '"session_status": "session_terminated"'
+            - '"current_decision": "fail"'
+          dist/interview-reports/validation-codex-fail/score.json:
+            - '"final_decision": "fail"'
+            - '"round2-perf-001"'
+          dist/interview-reports/validation-codex-fail/fail-summary.md:
+            - 'Interview Failure Summary'
+            - 'Improvement Suggestions'
+      acceptance:
+        - terminates_early: true
+        - writes_failure_artifacts: true

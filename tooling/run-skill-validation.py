@@ -88,6 +88,56 @@ def validate_skill_contract(root: Path, skill_name: str, validator: dict[str, An
     return checks
 
 
+def validate_command_artifacts(root: Path, validator: dict[str, Any]) -> list[CheckResult]:
+    command = validator["command"]
+    expected_files = validator.get("expected_files", [])
+    expected_contains = validator.get("expected_contains", [])
+    expected_file_contains = validator.get("expected_file_contains", {})
+    proc = subprocess.run(
+        command,
+        cwd=root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    checks = []
+    if proc.returncode != 0:
+        checks.append(CheckResult("FAIL", f"command exited with {proc.returncode}"))
+        if proc.stdout.strip():
+            checks.append(CheckResult("FAIL", proc.stdout.strip()))
+        if proc.stderr.strip():
+            checks.append(CheckResult("FAIL", proc.stderr.strip()))
+        return checks
+
+    stdout = proc.stdout + "\n" + proc.stderr
+    for needle in expected_contains:
+        if needle in stdout:
+            checks.append(CheckResult("PASS", f"output contains {needle!r}"))
+        else:
+            checks.append(CheckResult("FAIL", f"output missing {needle!r}"))
+
+    for rel_path in expected_files:
+        target = root / rel_path
+        if target.exists():
+            checks.append(CheckResult("PASS", f"artifact exists: {rel_path}"))
+        else:
+            checks.append(CheckResult("FAIL", f"missing artifact: {rel_path}"))
+
+    for rel_path, needles in expected_file_contains.items():
+        target = root / rel_path
+        if not target.exists():
+            checks.append(CheckResult("FAIL", f"missing artifact for content check: {rel_path}"))
+            continue
+        text = target.read_text(encoding="utf-8")
+        for needle in needles:
+            if needle in text:
+                checks.append(CheckResult("PASS", f"{rel_path} contains {needle!r}"))
+            else:
+                checks.append(CheckResult("FAIL", f"{rel_path} missing {needle!r}"))
+
+    return checks
+
+
 def validate_scenario(root: Path, skill_name: str, scenario: dict[str, Any]) -> ScenarioResult:
     platform = scenario["platform"]
     name = scenario["name"]
@@ -122,6 +172,8 @@ def validate_scenario(root: Path, skill_name: str, scenario: dict[str, Any]) -> 
         result.checks.extend(validate_script_output(root, validator))
     elif vtype == "skill-contract":
         result.checks.extend(validate_skill_contract(root, skill_name, validator))
+    elif vtype == "command-artifacts":
+        result.checks.extend(validate_command_artifacts(root, validator))
     else:
         result.checks.append(CheckResult("WARN", f"no validator configured for {skill_name}/{name}"))
 

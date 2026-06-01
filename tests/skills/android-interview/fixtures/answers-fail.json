@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "candidate_name": "Taylor Weak"
+  },
+  "intro-self-001": {
+    "answer": "I am a senior Android engineer focused on large consumer apps, Android architecture, and delivery quality. My strongest project was improving startup stability and modular delivery for a super app where I owned Android-side release readiness and migration coordination, because startup and quality were critical launch risks.",
+    "follow_up_answers": [
+      "I personally owned Android-side module boundary coordination, release readiness checks, and part of the startup quality review with backend and QA.",
+      "We tracked startup latency, ANR, and release quality at milestone reviews, and the first milestone reduced startup issues enough for the rollout to continue."
+    ]
+  },
+  "screening-auth-001": {
+    "answer": "I worked on our Android app and owned part of the project structure migration and release stability process during a large modularization effort, because the team needed a safer path than a large rewrite.",
+    "follow_up_answers": [
+      "My responsibility was defining Android-side migration checkpoints, coordinating quality gates with QA, and aligning the Android module boundaries.",
+      "We looked at startup, ANR, and release stability around each milestone, and the first migration step was accepted because the key stability metrics stayed within target."
+    ]
+  },
+  "round1-core-001": {
+    "answer": "I use ViewModel and lifecycle-aware collection to avoid duplicated work and unstable state when screens are recreated during complex feature flows.",
+    "follow_up_answers": [
+      "The key failure mode was duplicated actions after recreation, so I separated persistent state from one-off effects.",
+      "I validated the change with reproduction steps, logs, and targeted regression verification."
+    ]
+  },
+  "generated-round1-implementation-detail-002": {
+    "answer": "One implementation detail I owned was a safer event pipeline for a payment flow, especially around duplicate actions and recreated screens.",
+    "follow_up_answers": [
+      "The easiest edge case to get wrong was duplicate submission after screen recreation and repeated entry.",
+      "We validated it with targeted regression testing and event logs."
+    ]
+  },
+  "round2-perf-001": {
+    "answer": "We optimized startup a bit. I do not remember the exact process or metrics.",
+    "follow_up_answers": [
+      "We changed some initialization behavior.",
+      "I am not sure about the exact regression protection."
+    ]
+  }
+}
