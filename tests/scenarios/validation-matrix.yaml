@@ -136,12 +136,12 @@ skills:
             - '"question_bank_validation"'
             - '"resume_prep"'
           dist/interview-reports/validation-claude-code/report.html:
-            - 'Screening Snapshot'
-            - 'Resume Prep Brief'
-            - 'Question Bank Validation'
-            - 'Follow-up chain'
-            - 'Consistency Review'
-            - 'Question bank alignment'
+            - '筛选快照'
+            - '简历准备简报'
+            - '题库校验'
+            - '追问链路'
+            - '一致性检查'
+            - '题库对齐度'
       acceptance:
         - writes_local_artifacts: true
         - generates_tts_audio: true
@@ -204,13 +204,13 @@ skills:
             - '"question_bank_validation"'
             - '"resume_prep"'
           dist/interview-reports/validation-claude-code-interactive/report.html:
-            - 'Screening Snapshot'
-            - 'Resume Prep Brief'
-            - 'Question Bank Validation'
-            - 'Follow-up chain'
-            - 'Round Deliberations'
-            - 'Consistency Review'
-            - 'Question bank alignment'
+            - '筛选快照'
+            - '简历准备简报'
+            - '题库校验'
+            - '追问链路'
+            - '轮次评审'
+            - '一致性检查'
+            - '题库对齐度'
           dist/interview-reports/validation-claude-code-interactive/session-progress.json:
             - '"latest_question_feedback"'
             - '"round_deliberations"'
@@ -368,8 +368,8 @@ skills:
             - 'If needed I can briefly clarify in Chinese, but please keep your core answer in English.'
             - '接下来进入 HR Interview。当前面试官风格为“领导力评估型”。'
           dist/interview-reports/validation-claude-code-custom/report.html:
-            - 'language=bilingual'
-            - 'language=zh'
+            - '语言=bilingual'
+            - '语言=中文'
           dist/interview-reports/validation-claude-code-custom/score.json:
             - '"question_count": 6'
       acceptance:
@@ -416,8 +416,8 @@ skills:
             - '"interactive_mode": true'
             - '"consistency_summary"'
           dist/interview-reports/validation-claude-code-consistency/report.html:
-            - 'Consistency Challenges'
-            - 'ownership_consistency'
+            - '一致性挑战'
+            - '职责归属_consistency'
           dist/interview-reports/validation-claude-code-consistency/score.json:
             - '"question_count": 10'
             - '"consistency_summary"'
@@ -464,7 +464,7 @@ skills:
             - '"stage": "adaptive_route"'
             - '"round2-deep-dive-001"'
           dist/interview-reports/validation-claude-code-adaptive/report.html:
-            - 'Adaptive Routing'
+            - '自适应路由'
             - 'round2-deep-dive-001'
           dist/interview-reports/validation-claude-code-adaptive/score.json:
             - '"question_count": 8'
@@ -514,8 +514,8 @@ skills:
             - '"stage": "hold"'
             - '"stage": "round_transition"'
           dist/interview-reports/validation-claude-code-deliberation-bridge/report.html:
-            - 'Round Holds'
-            - 'Round Transitions'
+            - '轮次暂停点'
+            - '轮次过渡'
             - 'generated-round2-tradeoff-reasoning-002'
           dist/interview-reports/validation-claude-code-deliberation-bridge/panel-notes.md:
             - 'Panel Notes'
@@ -627,12 +627,12 @@ skills:
             - '"question_bank_validation"'
             - '"resume_prep"'
           dist/interview-reports/validation-codex/report.html:
-            - 'Screening Snapshot'
-            - 'Resume Prep Brief'
-            - 'Question Bank Validation'
-            - 'Follow-up chain'
-            - 'Consistency Review'
-            - 'Question bank alignment'
+            - '筛选快照'
+            - '简历准备简报'
+            - '题库校验'
+            - '追问链路'
+            - '一致性检查'
+            - '题库对齐度'
       acceptance:
         - writes_local_artifacts: true
         - generates_tts_audio: true
@@ -695,13 +695,13 @@ skills:
             - '"question_bank_validation"'
             - '"resume_prep"'
           dist/interview-reports/validation-codex-interactive/report.html:
-            - 'Screening Snapshot'
-            - 'Resume Prep Brief'
-            - 'Question Bank Validation'
-            - 'Follow-up chain'
-            - 'Round Deliberations'
-            - 'Consistency Review'
-            - 'Question bank alignment'
+            - '筛选快照'
+            - '简历准备简报'
+            - '题库校验'
+            - '追问链路'
+            - '轮次评审'
+            - '一致性检查'
+            - '题库对齐度'
           dist/interview-reports/validation-codex-interactive/session-progress.json:
             - '"latest_question_feedback"'
             - '"round_deliberations"'
@@ -859,8 +859,8 @@ skills:
             - 'If needed I can briefly clarify in Chinese, but please keep your core answer in English.'
             - '接下来进入 HR Interview。当前面试官风格为“领导力评估型”。'
           dist/interview-reports/validation-codex-custom/report.html:
-            - 'language=bilingual'
-            - 'language=zh'
+            - '语言=bilingual'
+            - '语言=中文'
           dist/interview-reports/validation-codex-custom/score.json:
             - '"question_count": 6'
       acceptance:
@@ -907,8 +907,8 @@ skills:
             - '"interactive_mode": true'
             - '"consistency_summary"'
           dist/interview-reports/validation-codex-consistency/report.html:
-            - 'Consistency Challenges'
-            - 'ownership_consistency'
+            - '一致性挑战'
+            - '职责归属_consistency'
           dist/interview-reports/validation-codex-consistency/score.json:
             - '"question_count": 10'
             - '"consistency_summary"'
@@ -955,7 +955,7 @@ skills:
             - '"stage": "adaptive_route"'
             - '"round2-deep-dive-001"'
           dist/interview-reports/validation-codex-adaptive/report.html:
-            - 'Adaptive Routing'
+            - '自适应路由'
             - 'round2-deep-dive-001'
           dist/interview-reports/validation-codex-adaptive/score.json:
             - '"question_count": 8'
@@ -1005,8 +1005,8 @@ skills:
             - '"stage": "hold"'
             - '"stage": "round_transition"'
           dist/interview-reports/validation-codex-deliberation-bridge/report.html:
-            - 'Round Holds'
-            - 'Round Transitions'
+            - '轮次暂停点'
+            - '轮次过渡'
             - 'generated-round2-tradeoff-reasoning-002'
           dist/interview-reports/validation-codex-deliberation-bridge/panel-notes.md:
             - 'Panel Notes'
