@@ -6,7 +6,9 @@
 
 [English](./README.md) | 中文
 
-`hulk-skills` 是一个个人 AI skills 的 monorepo 仓库，当前以 `Claude Code` 为主平台，同时兼容 `Codex`。
+`hulk-skills` 是一个面向现代 coding agents 的可复用 AI skills、runtime 与 workflow tools 集合，适用于 `Claude Code`、`Codex` 以及类似系统。
+
+它的目标是把工程、内容、自动化与日常效率场景中的可重复任务，沉淀为可跨平台复用的 agent workflow。
 
 ## 项目亮点
 

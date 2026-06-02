@@ -6,7 +6,9 @@
 
 English | [中文](./README.zh-CN.md)
 
-`hulk-skills` is a personal AI skills monorepo. `Claude Code` is the primary platform, and `Codex` is supported as a compatibility target.
+`hulk-skills` is a curated collection of reusable AI skills, runtimes, and workflow tools for modern coding agents such as `Claude Code`, `Codex`, and similar systems.
+
+It is designed to turn repeatable engineering, content, automation, and productivity tasks into portable agent workflows that can be reused across different platforms.
 
 ## Highlights
 
