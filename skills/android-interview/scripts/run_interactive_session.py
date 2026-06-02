@@ -1150,9 +1150,12 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
                 decision_result="pending",
                 tts_file=tts_file,
                 persona=persona.persona,
+                question_id=question.id,
+                question_title=question.title,
                 notes=["main_question"],
             )
         )
+        main_turn_index = turn_index
 
         follow_up_answers: list[str] = []
         follow_up_chain: list[dict[str, str]] = []
@@ -1210,6 +1213,12 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
                     decision_result="pending",
                     tts_file=tts_file,
                     persona=persona.persona,
+                    question_id=question.id,
+                    question_title=question.title,
+                    parent_question_id=question.id,
+                    parent_question_title=question.title,
+                    parent_turn_index=main_turn_index,
+                    follow_up_index=follow_up_count,
                     notes=candidate["notes"],
                 )
             )
@@ -1976,7 +1985,7 @@ def interactive_run(args: argparse.Namespace) -> tuple[str, list[QuestionResult]
     render_screening_summary(output_dir / "screening-summary.md", session_id, screening_summary)
     render_resume_prep(output_dir / "resume-prep.md", session_id, resume_prep)
     write_json(output_dir / "turn-events.json", {"turn_events": [event.__dict__ for event in turn_events]})
-    render_transcript(output_dir / "transcript.md", session_id, results, round_summaries, round_deliberations)
+    render_transcript(output_dir / "transcript.md", session_id, results, round_summaries, round_deliberations, turn_events)
     render_report(output_dir / "report.html", session_data, score_data)
     refresh_progress(
         current_round="",

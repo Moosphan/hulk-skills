@@ -31,7 +31,6 @@
 ```text
 hulk-skills/
 ├── .github/workflows/
-├── docs/
 ├── skills/
 │   ├── readme-generator/
 │   └── word-counter/
@@ -67,7 +66,7 @@ python3 tooling/build-skill-packages.py --clean --version local
 
 ## 更多信息
 
-完整的项目架构、迁移规范、平台适配策略见 [docs/hulk-skills-architecture.md](docs/hulk-skills-architecture.md)。
+以上仓库结构和校验流程就是当前对外可见的权威说明；如果需要看某个 skill 的细节，请直接查看 `skills/` 下对应目录。
 
 ## License
 

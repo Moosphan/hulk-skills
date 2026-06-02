@@ -273,7 +273,7 @@ def main() -> int:
     write_json(output_dir / "resume-prep.json", resume_prep)
     render_screening_summary(output_dir / "screening-summary.md", session_id, screening_summary)
     render_resume_prep(output_dir / "resume-prep.md", session_id, resume_prep)
-    render_transcript(output_dir / "transcript.md", session_id, results, round_summaries, round_deliberations)
+    render_transcript(output_dir / "transcript.md", session_id, results, round_summaries, round_deliberations, [])
     render_report(output_dir / "report.html", session_data, score_data)
     if decision == "fail":
         render_reject_mail(output_dir / "mail-reject.html", session_id, hard_fail_flags, round_summaries)

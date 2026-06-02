@@ -98,12 +98,14 @@ def main() -> int:
     if panel_memos:
         write_json(output_dir / "panel-notes.json", {"panel_memos": panel_memos})
 
+    turn_events = session_data.get("turn_events") or []
     render_transcript(
         output_dir / "transcript.md",
         session_id,
         results,
         round_summaries,
         round_deliberations,
+        turn_events,
     )
     render_report(output_dir / "report.html", session_data, score_data)
 

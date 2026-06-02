@@ -31,7 +31,6 @@ The repository follows a simple source-first model:
 ```text
 hulk-skills/
 ├── .github/workflows/
-├── docs/
 ├── skills/
 │   ├── readme-generator/
 │   └── word-counter/
@@ -67,7 +66,7 @@ These commands validate the scenario matrix and build installable zip packages f
 
 ## More
 
-See [docs/hulk-skills-architecture.md](docs/hulk-skills-architecture.md) for the full architecture, migration rules, and platform strategy.
+The repository structure and validation flow above reflect the current source-of-truth. For skill-specific details, check each skill directory under `skills/`.
 
 ## License
 

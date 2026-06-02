@@ -32,6 +32,27 @@ ROUND_FOCUS = {
     "hr": ["motivation", "conflict_handling", "leadership", "stability"],
 }
 
+ROUND_SEQUENCE = ["intro", "screening", "round1", "round2", "round3", "hr"]
+
+TURN_STAGE_LABELS = {
+    "intro": "阶段介绍",
+    "question": "主问题",
+    "questioning": "主问题",
+    "follow_up": "追问",
+    "challenge": "追问挑战",
+    "consistency_challenge": "一致性挑战",
+    "feedback": "即时反馈",
+    "adaptive_route": "自适应路由",
+    "switch_topic": "切换题型/主题",
+    "round_transition": "轮次过渡",
+    "handoff_route": "承接路由",
+    "summary": "阶段总结",
+    "deliberation": "阶段评审",
+    "hold": "阶段暂缓",
+    "advance": "阶段晋级",
+    "reject": "阶段终止",
+}
+
 COMPETENCY_FAMILY_MAP = {
     "technical_depth": "technical_depth",
     "android_core": "technical_depth",
@@ -222,6 +243,12 @@ class TurnEvent:
     confidence: float | None = None
     tts_file: str = ""
     persona: str = ""
+    question_id: str = ""
+    question_title: str = ""
+    parent_question_id: str = ""
+    parent_question_title: str = ""
+    parent_turn_index: int | None = None
+    follow_up_index: int | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -241,6 +268,220 @@ class RoundSummary:
     question_ids: list[str]
     terminated: bool = False
     threshold_summary: dict[str, Any] = field(default_factory=dict)
+
+
+def round_sort_index(round_name: str) -> int:
+    try:
+        return ROUND_SEQUENCE.index(str(round_name))
+    except ValueError:
+        return len(ROUND_SEQUENCE)
+
+
+def stage_label(stage: str) -> str:
+    return TURN_STAGE_LABELS.get(str(stage or "").strip(), str(stage or "").strip() or "未知阶段")
+
+
+MAIN_QUESTION_STAGES = {"question", "questioning"}
+FOLLOW_UP_STAGES = {"follow_up", "challenge", "consistency_challenge"}
+
+
+def normalize_turn_event(raw_event: TurnEvent | dict[str, Any]) -> dict[str, Any]:
+    if isinstance(raw_event, TurnEvent):
+        payload = asdict(raw_event)
+    else:
+        payload = dict(raw_event or {})
+    payload.setdefault("turn_index", 0)
+    payload.setdefault("round", "")
+    payload.setdefault("stage", "")
+    payload.setdefault("prompt", "")
+    payload.setdefault("response", "")
+    payload.setdefault("decision_result", "")
+    payload.setdefault("score", None)
+    payload.setdefault("confidence", None)
+    payload.setdefault("tts_file", "")
+    payload.setdefault("persona", "")
+    payload.setdefault("question_id", "")
+    payload.setdefault("question_title", "")
+    payload.setdefault("parent_question_id", "")
+    payload.setdefault("parent_question_title", "")
+    payload.setdefault("parent_turn_index", None)
+    payload.setdefault("follow_up_index", None)
+    payload.setdefault("notes", [])
+    return payload
+
+
+def build_timeline_records(
+    turn_events: list[TurnEvent] | list[dict[str, Any]] | None,
+    question_records: list[QuestionResult] | list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    ordered_questions = sorted(
+        [item if isinstance(item, dict) else asdict(item) for item in (question_records or [])],
+        key=lambda item: (
+            round_sort_index(str(item.get("round", ""))),
+            int(item.get("turn_index", 0) or 0),
+            str(item.get("id", "")),
+        ),
+    )
+    raw_events = sorted(
+        [normalize_turn_event(item) for item in (turn_events or [])],
+        key=lambda item: int(item.get("turn_index", 0) or 0),
+    )
+
+    question_by_turn = {
+        int(item.get("turn_index", 0) or 0): item
+        for item in ordered_questions
+        if int(item.get("turn_index", 0) or 0) > 0
+    }
+    question_by_id = {
+        str(item.get("id", "")): item
+        for item in ordered_questions
+        if str(item.get("id", ""))
+    }
+    prompt_to_question: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in ordered_questions:
+        prompt = str(item.get("question", "") or "").strip()
+        round_name = str(item.get("round", "") or "").strip()
+        if prompt and round_name:
+            prompt_to_question[(round_name, prompt)] = item
+
+    last_main_turn_by_round: dict[str, int] = {}
+    existing_follow_ups_by_parent: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    inferred_follow_up_index: dict[int, int] = defaultdict(int)
+    timeline_records: list[dict[str, Any]] = []
+
+    for seq, event in enumerate(raw_events):
+        round_name = str(event.get("round", "") or "")
+        stage = str(event.get("stage", "") or "")
+        turn_index = int(event.get("turn_index", 0) or 0)
+
+        question = None
+        question_id = str(event.get("question_id", "") or "")
+        if question_id:
+            question = question_by_id.get(question_id)
+        if question is None and turn_index in question_by_turn:
+            question = question_by_turn.get(turn_index)
+        if question is None:
+            question = prompt_to_question.get((round_name, str(event.get("prompt", "") or "").strip()))
+
+        resolved_question_id = str(event.get("question_id", "") or (question.get("id", "") if question else ""))
+        resolved_question_title = str(event.get("question_title", "") or (question.get("title", "") if question else ""))
+
+        parent_turn_index = event.get("parent_turn_index")
+        if parent_turn_index is None and stage in FOLLOW_UP_STAGES:
+            parent_turn_index = last_main_turn_by_round.get(round_name)
+        if parent_turn_index is not None:
+            parent_turn_index = int(parent_turn_index)
+
+        if stage in MAIN_QUESTION_STAGES:
+            last_main_turn_by_round[round_name] = turn_index
+            timeline_records.append(
+                {
+                    **event,
+                    "question_id": resolved_question_id,
+                    "question_title": resolved_question_title,
+                    "parent_question_id": "",
+                    "parent_question_title": "",
+                    "parent_turn_index": None,
+                    "follow_up_index": None,
+                    "display_turn_index": f"#{turn_index}",
+                    "group_label": "主问题",
+                    "parent_display": "",
+                    "is_synthetic": False,
+                    "timeline_sort": (turn_index, 0, seq),
+                }
+            )
+            continue
+
+        if stage in FOLLOW_UP_STAGES:
+            if not parent_turn_index and resolved_question_id:
+                question_item = question_by_id.get(resolved_question_id)
+                if question_item:
+                    parent_turn_index = int(question_item.get("turn_index", 0) or 0) or None
+            parent_question = question_by_turn.get(int(parent_turn_index or 0)) if parent_turn_index else None
+            parent_question_id = str(event.get("parent_question_id", "") or resolved_question_id or (parent_question.get("id", "") if parent_question else ""))
+            parent_question_title = str(
+                event.get("parent_question_title", "")
+                or resolved_question_title
+                or (parent_question.get("title", "") if parent_question else "")
+            )
+            if parent_turn_index:
+                inferred_follow_up_index[parent_turn_index] += 1
+            follow_up_index = int(event.get("follow_up_index") or inferred_follow_up_index.get(int(parent_turn_index or 0), 0) or 1)
+            existing_follow_ups_by_parent[int(parent_turn_index or 0)].add(
+                (str(event.get("prompt", "") or ""), str(event.get("response", "") or ""))
+            )
+            parent_display = (
+                f"归属主问题 #{parent_turn_index} {parent_question_title}".strip()
+                if parent_turn_index
+                else (f"归属主问题 {parent_question_title}" if parent_question_title else "")
+            )
+            timeline_records.append(
+                {
+                    **event,
+                    "question_id": resolved_question_id or parent_question_id,
+                    "question_title": resolved_question_title or parent_question_title,
+                    "parent_question_id": parent_question_id,
+                    "parent_question_title": parent_question_title,
+                    "parent_turn_index": parent_turn_index,
+                    "follow_up_index": follow_up_index,
+                    "display_turn_index": f"#{turn_index}",
+                    "group_label": f"追问 {follow_up_index}",
+                    "parent_display": parent_display,
+                    "is_synthetic": False,
+                    "timeline_sort": (turn_index, 1, seq),
+                }
+            )
+            continue
+
+        timeline_records.append(
+            {
+                **event,
+                "question_id": resolved_question_id,
+                "question_title": resolved_question_title,
+                "display_turn_index": f"#{turn_index}",
+                "group_label": stage_label(stage),
+                "parent_display": "",
+                "is_synthetic": False,
+                "timeline_sort": (turn_index, 2, seq),
+            }
+        )
+
+    for question in ordered_questions:
+        parent_turn_index = int(question.get("turn_index", 0) or 0)
+        if parent_turn_index <= 0:
+            continue
+        for idx, item in enumerate(question.get("follow_up_chain", []) or [], start=1):
+            signature = (str(item.get("question", "") or ""), str(item.get("answer", "") or ""))
+            if signature in existing_follow_ups_by_parent.get(parent_turn_index, set()):
+                continue
+            timeline_records.append(
+                {
+                    "turn_index": parent_turn_index,
+                    "round": str(question.get("round", "") or ""),
+                    "stage": "follow_up",
+                    "prompt": signature[0],
+                    "response": signature[1],
+                    "decision_result": "",
+                    "score": None,
+                    "confidence": None,
+                    "tts_file": "",
+                    "persona": str(question.get("persona", "") or ""),
+                    "question_id": str(question.get("id", "") or ""),
+                    "question_title": str(question.get("title", "") or ""),
+                    "parent_question_id": str(question.get("id", "") or ""),
+                    "parent_question_title": str(question.get("title", "") or ""),
+                    "parent_turn_index": parent_turn_index,
+                    "follow_up_index": idx,
+                    "notes": ["synthetic_follow_up_from_score"],
+                    "display_turn_index": f"#{parent_turn_index}.{idx}",
+                    "group_label": f"追问 {idx}",
+                    "parent_display": f"归属主问题 #{parent_turn_index} {question.get('title', '')}".strip(),
+                    "is_synthetic": True,
+                    "timeline_sort": (parent_turn_index, idx, 1000 + idx),
+                }
+            )
+
+    return sorted(timeline_records, key=lambda item: item["timeline_sort"])
 
 
 def read_text(path: str | Path) -> str:
@@ -1143,7 +1384,15 @@ def compose_main_prompt(question: Question, persona: PersonaConfig, language: st
             "Be precise and avoid staying at the concept level.",
             "Be precise and avoid staying at the concept level. 请尽量具体。",
         )
-    parts = [f"[{question.round}] {question.question}"]
+    round_label = ROUND_LABELS.get(question.round, question.round)
+    focus_tags = " / ".join(question_focuses(question)[:3])
+    stage_hint = language_text(
+        language,
+        f"当前阶段：{round_label}" + (f"；本题类型：{focus_tags}" if focus_tags else ""),
+        f"Current stage: {round_label}" + (f"; question type: {focus_tags}" if focus_tags else ""),
+        f"Current stage: {round_label}" + (f"; question type: {focus_tags}" if focus_tags else "") + f"\n当前阶段：{round_label}" + (f"；本题类型：{focus_tags}" if focus_tags else ""),
+    )
+    parts = [stage_hint, question.question]
     if guidance_hint:
         parts.append(guidance_hint)
     if pressure_hint:
@@ -2318,8 +2567,10 @@ def render_transcript(
     results: list[QuestionResult],
     round_summaries: list[RoundSummary] | None = None,
     round_deliberations: list[dict[str, Any]] | None = None,
+    turn_events: list[TurnEvent] | list[dict[str, Any]] | None = None,
 ) -> None:
     lines = [f"# Interview Transcript - {session_id}", ""]
+    timeline_records = build_timeline_records(turn_events, results)
     if round_summaries:
         lines.append("## Round Summaries")
         lines.append("")
@@ -2342,41 +2593,66 @@ def render_transcript(
                 lines.append(f"  - Notes: {'; '.join(item['review_notes'])}")
         lines.append("")
 
-    for result in results:
-        lines.append(f"## {ROUND_LABELS.get(result.round, result.round)} - {result.title}")
+    grouped: dict[str, list[QuestionResult]] = defaultdict(list)
+    for result in sorted(results, key=lambda item: (round_sort_index(item.round), item.turn_index, item.id)):
+        grouped[result.round].append(result)
+
+    for round_name in ROUND_SEQUENCE:
+        round_results = grouped.get(round_name, [])
+        if not round_results:
+            continue
+        lines.append(f"## {ROUND_LABELS.get(round_name, round_name)}")
         lines.append("")
-        lines.append(f"**Persona**: {result.persona}")
-        lines.append("")
-        lines.append(f"**Question**: {result.question}")
-        lines.append("")
-        lines.append(f"**Answer**: {result.answer}")
-        lines.append("")
-        for idx, follow_up in enumerate(result.follow_up_chain, start=1):
-            lines.append(f"**Follow-up {idx}**: {follow_up['question']}")
+        for result in round_results:
+            lines.append(f"### {result.title}")
             lines.append("")
-            lines.append(f"**Candidate**: {follow_up['answer'] or '[no follow-up answer]'}")
+            lines.append(f"- Persona: {result.persona}")
+            lines.append(f"- Decision Result: {result.decision_result}")
+            lines.append(f"- Decision Reason: {result.decision_reason}")
+            lines.append(f"- Score: {result.score} / 5")
+            lines.append(f"- Confidence: {result.confidence}")
             lines.append("")
-        lines.append(f"**Decision Result**: {result.decision_result}")
+            lines.append(f"**Question**: {result.question}")
+            lines.append("")
+            lines.append(f"**Answer**: {result.answer}")
+            lines.append("")
+            for idx, follow_up in enumerate(result.follow_up_chain, start=1):
+                lines.append(f"**Follow-up {idx}**: {follow_up['question']}")
+                lines.append("")
+                lines.append(f"**Candidate**: {follow_up['answer'] or '[no follow-up answer]'}")
+                lines.append("")
+            if result.strength_evidence:
+                lines.append("**Strength Evidence**:")
+                for item in result.strength_evidence:
+                    lines.append(f"- {item}")
+                lines.append("")
+            if result.risk_evidence:
+                lines.append("**Risk Evidence**:")
+                for item in result.risk_evidence:
+                    lines.append(f"- {item}")
+                lines.append("")
+            if result.missing_evidence:
+                lines.append("**Missing Evidence**:")
+                for item in result.missing_evidence:
+                    lines.append(f"- {item}")
+                lines.append("")
+
+    if timeline_records:
+        lines.append("## Chronological Turn Log")
         lines.append("")
-        lines.append(f"**Decision Reason**: {result.decision_reason}")
+        for event in timeline_records:
+            lines.append(
+                f"- {event['display_turn_index']} | {ROUND_LABELS.get(event['round'], event['round'])} | {stage_label(event['stage'])} | {event['group_label']} | decision={event['decision_result'] or 'pending'}"
+            )
+            if event.get("parent_display"):
+                lines.append(f"  - Parent: {event['parent_display']}")
+            if event.get("prompt"):
+                lines.append(f"  - Prompt: {event['prompt']}")
+            if event.get("response"):
+                lines.append(f"  - Response: {event['response']}")
+            if event.get("notes"):
+                lines.append(f"  - Notes: {', '.join(event['notes'])}")
         lines.append("")
-        lines.append(f"**Score**: {result.score} / 5")
-        lines.append("")
-        if result.strength_evidence:
-            lines.append("**Strength Evidence**:")
-            for item in result.strength_evidence:
-                lines.append(f"- {item}")
-            lines.append("")
-        if result.risk_evidence:
-            lines.append("**Risk Evidence**:")
-            for item in result.risk_evidence:
-                lines.append(f"- {item}")
-            lines.append("")
-        if result.missing_evidence:
-            lines.append("**Missing Evidence**:")
-            for item in result.missing_evidence:
-                lines.append(f"- {item}")
-            lines.append("")
     path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
 
 
@@ -2665,6 +2941,72 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
             return "候选人存在一定匹配度，但仍有若干关键能力需要进一步补证和核验。"
         return "本次收集到的证据尚不足以支撑明确通过结论。"
 
+    ordered_questions = sorted(
+        list(score_data.get("questions", []) or []),
+        key=lambda item: (
+            round_sort_index(str(item.get("round", ""))),
+            int(item.get("turn_index", 0) or 0),
+            str(item.get("id", "")),
+        ),
+    )
+    ordered_turn_events = sorted(
+        list(session_data.get("turn_events", []) or []),
+        key=lambda item: int(item.get("turn_index", 0) or 0),
+    )
+    timeline_records = build_timeline_records(ordered_turn_events, ordered_questions)
+    round_summary_map = {str(item.get("round", "")): item for item in session_data.get("round_summaries", []) or []}
+    round_deliberation_map = {str(item.get("round", "")): item for item in session_data.get("round_deliberations", []) or []}
+
+    phase_records: list[dict[str, Any]] = []
+    for round_name in ROUND_SEQUENCE:
+        round_questions = [item for item in ordered_questions if str(item.get("round", "")) == round_name]
+        round_events = [item for item in ordered_turn_events if str(item.get("round", "")) == round_name]
+        round_summary = round_summary_map.get(round_name, {})
+        round_deliberation = round_deliberation_map.get(round_name, {})
+        if not round_questions and not round_events and not round_summary:
+            continue
+        key_events = [
+            item
+            for item in round_events
+            if str(item.get("stage", "")) in {"intro", "round_transition", "handoff_route", "summary", "deliberation", "hold", "advance", "reject", "adaptive_route", "switch_topic"}
+        ]
+        phase_records.append(
+            {
+                "round": round_name,
+                "label": ROUND_LABELS.get(round_name, round_name),
+                "summary": round_summary,
+                "deliberation": round_deliberation,
+                "questions": round_questions,
+                "events": key_events,
+                "question_count": len(round_questions),
+                "event_count": len(round_events),
+                "status": (
+                    "blocked"
+                    if str(round_summary.get("decision", "")) == "reject"
+                    else "done"
+                    if str(round_summary.get("decision", "")) in {"advance", "advance_with_risk"}
+                    else "current"
+                    if round_summary
+                    else "pending"
+                ),
+            }
+        )
+
+    main_question_events = [item for item in ordered_turn_events if str(item.get("stage", "")) == "questioning"]
+    follow_up_events = [item for item in ordered_turn_events if str(item.get("stage", "")) in {"follow_up", "challenge"}]
+    report_completeness = {
+        "result_question_count": len(ordered_questions),
+        "main_question_event_count": len(main_question_events),
+        "follow_up_event_count": len(follow_up_events),
+        "timeline_follow_up_count": len([item for item in timeline_records if str(item.get("stage", "")) in FOLLOW_UP_STAGES]),
+        "coverage_status": "complete" if len(ordered_questions) == len(main_question_events) else "partial",
+        "coverage_message": (
+            "结果题目数与主问题事件数一致，数据层没有丢题，之前主要是报告展示方式没有把完整流程按阶段展开。"
+            if len(ordered_questions) == len(main_question_events)
+            else "结果题目数与主问题事件数不一致，说明在渲染前的数据归集阶段仍存在需要继续排查的缺口。"
+        ),
+    }
+
     template = Template(
         """
 <!DOCTYPE html>
@@ -2714,6 +3056,18 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
     .chip.blocked { background: #fdecea; color: #b42318; }
     .chip.pending { background: #eef2f6; color: #52606d; }
     .muted { color: #52606d; }
+    .phase-grid { display: grid; gap: 1rem; }
+    .phase-stage { border-radius: 18px; padding: 1rem 1.05rem; background: linear-gradient(180deg, #ffffff 0%, #f9fbfc 100%); border: 1px solid #dce7f1; }
+    .phase-stage header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .phase-stage h3 { margin: 0; }
+    .phase-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .kpi-pill { display: inline-block; border-radius: 999px; padding: 0.18rem 0.58rem; background: #f2f7fb; color: #0f2a43; font-size: 0.84rem; }
+    .qa-card { border-radius: 14px; border: 1px solid #e3ebf3; background: #fff; padding: 0.95rem 1rem; margin-top: 0.85rem; }
+    .qa-card h4 { margin: 0 0 0.55rem 0; color: #12344d; }
+    .stage-events { margin-top: 0.7rem; }
+    .stage-events ul { margin: 0.35rem 0 0 0; }
+    .note-box { border-radius: 14px; border: 1px solid #d9e7f5; background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%); padding: 0.9rem 1rem; }
+    .compact-table th, .compact-table td { padding: 0.45rem 0.5rem; font-size: 0.94rem; }
   </style>
 </head>
 <body>
@@ -2799,6 +3153,26 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
       </div>
     </section>
     {% endif %}
+
+    <section class="card">
+      <h2>阶段总览</h2>
+      <div class="summary-grid">
+        {% for phase in phase_records %}
+        <div class="summary-tile">
+          <strong>{{ zh_round_label(phase.round) }}</strong>
+          <span>{{ zh_decision(phase.summary.decision) if phase.summary else '未进入' }}</span>
+          <div class="muted">问题 {{ phase.question_count }} | 事件 {{ phase.event_count }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="note-box" style="margin-top: 1rem;">
+        <strong>记录完整性：</strong>
+        {{ '完整' if report_completeness.coverage_status == 'complete' else '待排查' }}。
+        主问题事件 {{ report_completeness.main_question_event_count }} 条，评分结果 {{ report_completeness.result_question_count }} 条，追问事件 {{ report_completeness.follow_up_event_count }} 条。
+        <div class="muted" style="margin-top: 0.35rem;">时间线已展开追问 {{ report_completeness.timeline_follow_up_count }} 条，并标注其归属主问题。</div>
+        <div class="muted" style="margin-top: 0.35rem;">{{ report_completeness.coverage_message }}</div>
+      </div>
+    </section>
 
     <section class="two-col">
       <div class="card">
@@ -2956,6 +3330,106 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
       </table>
     </section>
     {% endif %}
+
+    <section class="card">
+      <h2>按阶段记录</h2>
+      <div class="phase-grid">
+        {% for phase in phase_records %}
+        <section class="phase-stage">
+          <header>
+            <div>
+              <h3>{{ zh_round_label(phase.round) }}</h3>
+              {% if phase.summary %}
+              <div class="muted">{{ phase.summary.decision_reason }}</div>
+              {% endif %}
+            </div>
+            <div class="phase-meta">
+              <span class="kpi-pill">状态：{{ zh_decision(phase.summary.decision) if phase.summary else '未进入' }}</span>
+              <span class="kpi-pill">问题 {{ phase.question_count }}</span>
+              <span class="kpi-pill">事件 {{ phase.event_count }}</span>
+              {% if phase.summary %}
+              <span class="kpi-pill">分数 {{ phase.summary.score }} / 5</span>
+              <span class="kpi-pill">置信度 {{ phase.summary.confidence }}</span>
+              {% endif %}
+            </div>
+          </header>
+
+          {% if phase.summary.focus %}
+          <p><strong>阶段题型 / 重点：</strong>{{ zh_focus_list(phase.summary.focus) }}</p>
+          {% elif phase.deliberation.critical_focuses %}
+          <p><strong>阶段题型 / 重点：</strong>{{ zh_focus_list(phase.deliberation.critical_focuses) }}</p>
+          {% endif %}
+
+          {% if phase.events %}
+          <div class="stage-events">
+            <p><strong>阶段关键事件</strong></p>
+            <ul>
+              {% for event in phase.events %}
+              <li>
+                <strong>#{{ event.turn_index }} {{ stage_label(event.stage) }}</strong>
+                {% if event.response %}：{{ zh_internal_text(event.response) }}{% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% for result in phase.questions %}
+          <article class="qa-card">
+            <h4>{{ loop.index }}. {{ result.title }}</h4>
+            <p><strong>题目：</strong>{{ result.question }}</p>
+            <p><strong>回答：</strong>{{ result.answer }}</p>
+            {% if result.follow_up_chain %}
+            <p><strong>追问链路</strong></p>
+            <table class="compact-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>追问</th>
+                  <th>回答</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in result.follow_up_chain %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ item.question }}</td>
+                  <td>{{ item.answer or '无追问回答' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% endif %}
+            <div class="two-col">
+              <div>
+                <p><strong>阶段判断：</strong>{{ zh_result_action(result.decision_result) }}</p>
+                <p><strong>理由：</strong>{{ zh_internal_text(result.decision_reason) }}</p>
+              </div>
+              <div>
+                <p><strong>分数：</strong>{{ result.score }} / 5</p>
+                <p><strong>置信度：</strong>{{ result.confidence }}</p>
+                <p><strong>题库对齐度：</strong>{{ zh_question_alignment(result.question_bank_alignment) }}</p>
+              </div>
+            </div>
+            <div class="two-col">
+              <div>
+                <p><strong>优势证据</strong></p>
+                <ul>{% for item in result.strength_evidence %}<li>{{ item }}</li>{% endfor %}</ul>
+              </div>
+              <div>
+                <p><strong>风险 / 缺失证据</strong></p>
+                <ul>
+                  {% for item in result.risk_evidence %}<li>{{ item }}</li>{% endfor %}
+                  {% for item in result.missing_evidence %}<li>{{ item }}</li>{% endfor %}
+                </ul>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </section>
+        {% endfor %}
+      </div>
+    </section>
 
     <section class="card">
       <h2>轮次总结</h2>
@@ -3237,54 +3711,57 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
     {% endif %}
 
     <section class="card">
-      <h2>题目详情</h2>
-      {% for result in score.questions %}
-      <div class="card">
-        <h3>{{ zh_round_label(result.round) }} - {{ result.title }}</h3>
-        <p><strong>面试官风格：</strong> {{ result.persona }}</p>
-        {% if result.round_focus %}
-        <p><strong>考察重点：</strong> {{ zh_focus_list(result.round_focus) }}</p>
-        {% endif %}
-        <p><strong>题目：</strong> {{ result.question }}</p>
-        <p><strong>回答：</strong> {{ result.answer }}</p>
-        {% if result.follow_up_chain %}
-        <p><strong>追问链路：</strong></p>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>追问</th>
-              <th>候选人回答</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in result.follow_up_chain %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ item.question }}</td>
-              <td>{{ item.answer or '无追问回答' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% endif %}
-        <p><strong>决策：</strong> {{ zh_result_action(result.decision_result) }} | {{ zh_internal_text(result.decision_reason) }}</p>
-        <p><strong>分数：</strong> {{ result.score }} / 5（置信度 {{ result.confidence }}）</p>
-        <p><strong>题库对齐度：</strong> {{ zh_question_alignment(result.question_bank_alignment) }}</p>
-        {% if result.matched_good_signals %}
-        <p><strong>命中的正向信号：</strong> {{ result.matched_good_signals|join(', ') }}</p>
-        {% endif %}
-        {% if result.matched_red_flags %}
-        <p><strong>命中的风险信号：</strong> {{ result.matched_red_flags|join(', ') }}</p>
-        {% endif %}
-        <p><strong>优势证据：</strong></p>
-        <ul>{% for item in result.strength_evidence %}<li>{{ item }}</li>{% endfor %}</ul>
-        <p><strong>风险证据：</strong></p>
-        <ul>{% for item in result.risk_evidence %}<li>{{ item }}</li>{% endfor %}</ul>
-        <p><strong>缺失证据：</strong></p>
-        <ul>{% for item in result.missing_evidence %}<li>{{ item }}</li>{% endfor %}</ul>
-      </div>
-      {% endfor %}
+      <h2>完整面试时间线</h2>
+      <table class="compact-table">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>阶段</th>
+            <th>事件类型</th>
+            <th>归属链路</th>
+            <th>Prompt / 题目</th>
+            <th>记录 / 回答</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in timeline_records %}
+          <tr>
+            <td>{{ event.display_turn_index }}</td>
+            <td>{{ zh_round_label(event.round) }}</td>
+            <td>
+              <div>{{ stage_label(event.stage) }}</div>
+              <div class="muted">{{ event.group_label }}</div>
+            </td>
+            <td>
+              {% if event.parent_display %}
+              {{ event.parent_display }}
+              {% elif event.question_title %}
+              主问题 {{ event.question_title }}
+              {% else %}
+              <span class="muted">非问答事件</span>
+              {% endif %}
+              {% if event.is_synthetic %}
+              <div class="muted">由评分追问链补全</div>
+              {% endif %}
+            </td>
+            <td>{{ event.prompt or '无' }}</td>
+            <td>
+              {% if event.response %}
+              {{ zh_internal_text(event.response) }}
+              {% else %}
+              <span class="muted">无响应内容</span>
+              {% endif %}
+              {% if event.decision_result and event.decision_result != 'pending' %}
+              <div class="muted">决策：{{ zh_result_action(event.decision_result) }}</div>
+              {% endif %}
+              {% if event.score is not none %}
+              <div class="muted">分数：{{ event.score }} | 置信度：{{ event.confidence }}</div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </section>
   </div>
 </body>
@@ -3309,8 +3786,14 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
         zh_focus_name=zh_focus_name,
         zh_focus_list=zh_focus_list,
         zh_internal_text=zh_internal_text,
+        stage_label=stage_label,
         evidence_summary=evidence_summary,
         zh_final_summary=zh_final_summary_text(),
+        phase_records=phase_records,
+        ordered_turn_events=ordered_turn_events,
+        timeline_records=timeline_records,
+        ordered_questions=ordered_questions,
+        report_completeness=report_completeness,
     )
     path.write_text(html, encoding="utf-8")
 
@@ -3529,6 +4012,7 @@ def score_payload(
             "id": result.id,
             "title": result.title,
             "round": result.round,
+            "turn_index": result.turn_index,
             "question": result.question,
             "answer": result.answer,
             "follow_up_chain": result.follow_up_chain,
