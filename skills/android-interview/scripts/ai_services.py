@@ -15,7 +15,18 @@ class InterviewAIServices:
         self.config = config
         self.output_dir = output_dir
         self.trace_events: list[AITraceEvent] = []
+        self.translation_cache: dict[tuple[str, str, str], str] = {}
         self.client = build_ai_client(config)
+        self.translation_client = build_ai_client(
+            AIConfig(
+                mode="assist",
+                provider=config.provider,
+                model=config.model,
+                timeout_seconds=config.timeout_seconds,
+                cache_dir=config.cache_dir,
+                fixture_dir=config.fixture_dir,
+            )
+        )
 
     @property
     def provider_name(self) -> str:
@@ -288,3 +299,59 @@ class InterviewAIServices:
             stop_condition=str(data.get("stop_condition", "")),
             raw=data,
         )
+
+    def translate_text(self, text: str, *, source_language: str, target_language: str) -> str:
+        raw_text = str(text or "").strip()
+        if not raw_text or source_language == target_language:
+            return raw_text
+
+        cache_key = (raw_text, source_language, target_language)
+        if cache_key in self.translation_cache:
+            return self.translation_cache[cache_key]
+
+        role = "translator"
+        action = "speech-translate"
+        payload = {
+            "text": raw_text,
+            "source_language": source_language,
+            "target_language": target_language,
+            "required_json_shape": {
+                "translated_text": "translated text only",
+            },
+        }
+        system_prompt = (
+            "You translate interview prompts for speech playback only. "
+            "Preserve meaning, keep the tone natural for an interviewer, and return strict JSON only."
+        )
+        try:
+            data = self.translation_client.complete_json(role=role, action=action, system_prompt=system_prompt, payload=payload)
+            self._audit(role, action, payload, data)
+            self._record(
+                AITraceEvent(
+                    role=role,
+                    action=action,
+                    status="ai_used",
+                    provider=getattr(self.translation_client, "provider_name", self.provider_name),
+                    model=self.config.model,
+                    notes=["speech_translation"],
+                )
+            )
+            translated = str(data.get("translated_text", "")).strip() or raw_text
+        except Exception as exc:  # noqa: BLE001
+            self._audit(role, action, payload, None, str(exc))
+            self._record(
+                AITraceEvent(
+                    role=role,
+                    action=action,
+                    status="fallback_used",
+                    provider=getattr(self.translation_client, "provider_name", self.provider_name),
+                    model=self.config.model,
+                    fallback_used=True,
+                    error=str(exc),
+                    notes=["speech_translation"],
+                )
+            )
+            translated = raw_text
+
+        self.translation_cache[cache_key] = translated
+        return translated

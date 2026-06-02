@@ -31,6 +31,8 @@ class Question:
     scoring_notes: list[str] = field(default_factory=list)
     red_flags: list[str] = field(default_factory=list)
     good_signals: list[str] = field(default_factory=list)
+    spoken_question: dict[str, str] = field(default_factory=dict)
+    spoken_follow_ups: dict[str, list[str]] = field(default_factory=dict)
     source_path: str = ""
 
 
@@ -86,6 +88,8 @@ def _parse_bool(value: Any) -> bool:
 
 def parse_question_file(path: Path) -> Question:
     meta, body = _read_frontmatter_markdown(path)
+    spoken_question = meta.get("spoken_question", {}) or {}
+    spoken_follow_ups = meta.get("spoken_follow_ups", {}) or {}
     q = Question(
         id=str(meta.get("id", path.stem)),
         title=str(meta.get("title", path.stem)),
@@ -108,6 +112,16 @@ def parse_question_file(path: Path) -> Question:
         scoring_notes=_split_bullets(_extract_section(body, "Scoring Notes")),
         red_flags=_split_bullets(_extract_section(body, "Red Flags")),
         good_signals=_split_bullets(_extract_section(body, "Good Signals")),
+        spoken_question={str(key): str(value) for key, value in dict(spoken_question).items() if str(value).strip()}
+        if isinstance(spoken_question, dict)
+        else {},
+        spoken_follow_ups={
+            str(key): [str(item) for item in value if str(item).strip()]
+            for key, value in dict(spoken_follow_ups).items()
+            if isinstance(value, list)
+        }
+        if isinstance(spoken_follow_ups, dict)
+        else {},
         source_path=str(path),
     )
     if not q.question:
@@ -125,6 +139,29 @@ def load_question_bank(path: str | Path) -> list[Question]:
             continue
         questions.append(parse_question_file(file_path))
     return questions
+
+
+def load_speech_overrides(path: str | Path) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def apply_speech_overrides(questions: list[Question], payload: dict[str, Any] | None) -> None:
+    data = dict(payload or {})
+    question_overrides = data.get("questions", {}) if isinstance(data.get("questions", {}), dict) else {}
+    for question in questions:
+        override = question_overrides.get(question.id, {})
+        if not isinstance(override, dict):
+            continue
+        spoken_question = override.get("spoken_question", {})
+        if isinstance(spoken_question, dict):
+            question.spoken_question.update(
+                {str(key): str(value) for key, value in spoken_question.items() if str(value).strip()}
+            )
+        spoken_follow_ups = override.get("spoken_follow_ups", {})
+        if isinstance(spoken_follow_ups, dict):
+            for key, value in spoken_follow_ups.items():
+                if isinstance(value, list):
+                    question.spoken_follow_ups[str(key)] = [str(item) for item in value if str(item).strip()]
 
 
 def _validation_issue(severity: str, code: str, message: str, *, path: str = "", question_id: str = "") -> dict[str, Any]:

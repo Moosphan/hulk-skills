@@ -124,7 +124,9 @@ skills/android-interview/
 python3 -m pip install -r skills/android-interview/scripts/requirements.txt
 ```
 
-如果你需要音频产物，请保留 `edge-tts` 依赖，并在运行命令里加上 `--enable-tts`。
+如果你需要落盘的音频产物，请保留 `edge-tts` 依赖，并在运行命令里加上 `--enable-tts`。如果你希望交互式运行器在每轮介绍、主问题、追问以及进入下一步流程时直接实时播报，请额外加上 `--speak-prompts`。TTS 默认跟随当前会话或当前轮次语言，也可以用 `--tts-language` 强制指定播报语言；同时还支持配置语速、音高、音量，以及 `persona -> voice` 的映射。内建题目和流程提示会直接按播报语言生成。默认的 agent-first 模式下，如果外部题目或临时追问没有显式 spoken override，就会退回原始 prompt 文本；只有在你显式打开 `--allow-runtime-speech-translation` 时，运行时才会临时翻译这些缺失的播报文本。
+
+如果你希望由 skill agent 先准备好本地化的播报文本，再交给脚本做 TTS 和播放，可以使用 `--speech-overrides /path/to/speech-overrides.json`。这也是不依赖本地 Python runtime provider 凭证时更推荐的路径。
 
 ## Skill 优先快速开始
 
@@ -167,7 +169,9 @@ python3 skills/android-interview/scripts/run_interactive_session.py \
   --question-bank tests/skills/android-interview/fixtures/question-bank \
   --scripted-answers tests/skills/android-interview/fixtures/answers.json \
   --output-dir dist/interview-reports/local-interactive-demo \
-  --session-id local-interactive-demo
+  --session-id local-interactive-demo \
+  --enable-tts \
+  --speak-prompts
 ```
 
 ### 3. 运行真实的交互式练习
@@ -178,10 +182,98 @@ python3 skills/android-interview/scripts/run_interactive_session.py \
   --resume /path/to/resume.md \
   --question-bank /path/to/question-bank \
   --output-dir dist/interview-reports/my-session \
-  --session-id my-session
+  --session-id my-session \
+  --enable-tts \
+  --speak-prompts
 ```
 
 在真实 CLI 会话里，可用命令包括 `/help`、`/status`、`/plan`、`/feedback`、`/scorecard`、`/checkpoint`、`/repeat`、`/skip` 和 `/quit`。
+
+`--speak-prompts` 会在 prompt 音频生成后立刻调用本地播放器播报。`auto` 会优先选择 `afplay`，不可用时回退到 `ffplay`。
+如果你要传负值，比如 `-5%` 或 `-4Hz`，建议使用 `--flag=value` 这种写法，例如 `--tts-volume=-5%`。
+
+下面是一条带 persona 声线映射和播报调参的示例命令：
+
+```bash
+python3 skills/android-interview/scripts/run_interactive_session.py \
+  --jd /path/to/jd.md \
+  --resume /path/to/resume.md \
+  --question-bank /path/to/question-bank \
+  --output-dir dist/interview-reports/my-session \
+  --session-id my-session \
+  --enable-tts \
+  --speak-prompts \
+  --tts-language auto \
+  --tts-rate +8% \
+  --tts-pitch +6Hz \
+  --persona-voice-overrides technical-deep-diver=en-US-EricNeural,guided-coach=zh-CN-XiaoxiaoNeural
+```
+
+最小的 `speech-overrides.json` 结构示例：
+
+```json
+{
+  "questions": {
+    "intro-self-001": {
+      "spoken_question": {
+        "zh": "请你先做一个一到两分钟的自我介绍。"
+      },
+      "spoken_follow_ups": {
+        "zh": [
+          "你亲自负责了哪一部分？",
+          "为什么这个项目最能证明你适合这个岗位？"
+        ]
+      }
+    }
+  },
+  "follow_up_categories": {
+    "metrics_probe": {
+      "zh": "这件事最后是如何量化的？请给我指标口径、基线和最终变化。"
+    }
+  }
+}
+```
+
+如果你不想手工填写模板，也可以直接自动生成：
+
+```bash
+python3 skills/android-interview/scripts/generate_speech_overrides.py \
+  --question-bank /path/to/question-bank \
+  --output /path/to/speech-overrides.json \
+  --language zh \
+  --include-intro \
+  --fill-mode auto
+```
+
+`--fill-mode auto` 只有在你显式启用 `--ai-mode` 时才会走 AI 翻译；如果本地没有 provider，它也会退化成“把 display 文本拷贝到 spoken 字段里”，保证先产出一份完整文件，而不是卡在空白占位模板上。
+
+交互式会话现在也会在 session 输出目录里自动写出 `missing-speech-overrides.json`。只要运行时遇到“本地没有显式 override、只能临时生成播报文本”的 prompt，就会把本次实际使用到的 fallback 文本沉淀进去；暂停/恢复场景下也会持续 merge 到同一个文件里。
+
+如果你想把这份运行时产物回填成可长期复用的正式配置，可以直接执行：
+
+```bash
+python3 skills/android-interview/scripts/merge_speech_overrides.py \
+  --base /path/to/speech-overrides.json \
+  --missing /path/to/missing-speech-overrides.json \
+  --output /path/to/speech-overrides.merged.json
+```
+
+默认的 `fill-missing` 模式比较保守，只会补正式文件里仍然缺失的位置，不会把你已经人工润色过的文案又覆盖回 runtime fallback 文本。
+
+batch 导出也可以直接复用同一个文件。当存在 `spoken_question` 时，batch 运行器会优先用它生成 `tts/questions.mp3`，并把最终使用的播报文本同步记录到 `session.json`、`score.json` 和 `report.html`：
+
+```bash
+python3 skills/android-interview/scripts/run_interview_session.py \
+  --jd /path/to/jd.md \
+  --resume /path/to/resume.md \
+  --question-bank /path/to/question-bank \
+  --answers /path/to/answers.json \
+  --output-dir dist/interview-reports/my-batch-session \
+  --session-id my-batch-session \
+  --enable-tts \
+  --tts-language zh \
+  --speech-overrides /path/to/speech-overrides.json
+```
 
 ## 主要入口脚本
 
@@ -193,6 +285,12 @@ python3 skills/android-interview/scripts/run_interactive_session.py \
   基于仓库内置 fixtures 的批处理示例入口。
 - `scripts/run_resume_demo.py`
   用于验证 checkpoint 恢复能力的暂停/恢复示例。
+- `scripts/export_speech_overrides_template.py`
+  导出一个可由 skill agent 回填的播报文本模板 JSON。
+- `scripts/generate_speech_overrides.py`
+  自动生成一个 speech override JSON：优先复用现有 spoken 文本，缺失时按配置复制 display 文本或调用 AI 翻译。
+- `scripts/merge_speech_overrides.py`
+  把运行时产出的 `missing-speech-overrides.json` 合并回一个可复用的正式 speech override JSON。
 - `scripts/validate_question_bank.py`
   独立的外部 Markdown 题库校验工具。
 
@@ -281,7 +379,19 @@ Evaluate lifecycle reasoning, state separation, and practical Android implementa
 - `--level mid|senior|tl`
 - `--language zh|en|bilingual`
 - `--enable-tts`
-- `--voice en-US-AndrewNeural`
+- `--voice <voice-name>`
+- `--tts-language auto|zh|en|bilingual`
+- `--tts-rate +0%`
+- `--tts-pitch +0Hz`
+- `--tts-volume +0%`
+- `--allow-runtime-speech-translation` / `--no-allow-runtime-speech-translation`
+- `--persona-voice-overrides technical-deep-diver=en-US-EricNeural,guided-coach=zh-CN-XiaoxiaoNeural`
+- `--speak-prompts`
+- `--tts-playback-backend auto|afplay|ffplay|none`
+- `--tts-playback-timeout-seconds 120`
+- `--speech-overrides /path/to/speech-overrides.json`
+- `generate_speech_overrides.py --fill-mode auto|existing-only|copy-display|ai-translate`
+- `merge_speech_overrides.py --merge-mode fill-missing|overwrite-empty|overwrite-all`
 - `--default-persona technical-deep-diver`
 - `--round-persona-overrides round2=business-outcome,hr=leadership-evaluator`
 - `--round-language-overrides round2=bilingual,hr=zh`

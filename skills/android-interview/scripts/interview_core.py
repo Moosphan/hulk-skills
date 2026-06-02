@@ -229,6 +229,7 @@ class QuestionResult:
     matched_red_flags: list[str] = field(default_factory=list)
     expected_signal_hit: bool = False
     question_bank_alignment: str = ""
+    spoken_question: str = ""
 
 
 @dataclass
@@ -239,6 +240,7 @@ class TurnEvent:
     prompt: str
     response: str
     decision_result: str
+    spoken_text: str = ""
     score: int | None = None
     confidence: float | None = None
     tts_file: str = ""
@@ -294,6 +296,7 @@ def normalize_turn_event(raw_event: TurnEvent | dict[str, Any]) -> dict[str, Any
     payload.setdefault("round", "")
     payload.setdefault("stage", "")
     payload.setdefault("prompt", "")
+    payload.setdefault("spoken_text", "")
     payload.setdefault("response", "")
     payload.setdefault("decision_result", "")
     payload.setdefault("score", None)
@@ -310,12 +313,42 @@ def normalize_turn_event(raw_event: TurnEvent | dict[str, Any]) -> dict[str, Any
     return payload
 
 
+def serialize_question_record(raw_result: QuestionResult | dict[str, Any]) -> dict[str, Any]:
+    payload = asdict(raw_result) if isinstance(raw_result, QuestionResult) else dict(raw_result or {})
+    payload.setdefault("id", "")
+    payload.setdefault("title", "")
+    payload.setdefault("round", "")
+    payload.setdefault("turn_index", 0)
+    payload.setdefault("question", "")
+    payload.setdefault("spoken_question", "")
+    payload.setdefault("answer", "")
+    payload.setdefault("follow_up_chain", [])
+    payload.setdefault("score", 0)
+    payload.setdefault("confidence", 0.0)
+    payload.setdefault("strength_evidence", [])
+    payload.setdefault("risk_evidence", [])
+    payload.setdefault("missing_evidence", [])
+    payload.setdefault("decision_result", "")
+    payload.setdefault("decision_reason", "")
+    payload.setdefault("persona", "")
+    payload.setdefault("persona_dimensions", {})
+    payload.setdefault("competencies", [])
+    payload.setdefault("round_focus", [])
+    payload.setdefault("question_source", "")
+    payload.setdefault("matched_good_signals", [])
+    payload.setdefault("matched_red_flags", [])
+    payload.setdefault("expected_signal_hit", False)
+    payload.setdefault("question_bank_alignment", "")
+    payload.setdefault("source_path", "")
+    return payload
+
+
 def build_timeline_records(
     turn_events: list[TurnEvent] | list[dict[str, Any]] | None,
     question_records: list[QuestionResult] | list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     ordered_questions = sorted(
-        [item if isinstance(item, dict) else asdict(item) for item in (question_records or [])],
+        [serialize_question_record(item) for item in (question_records or [])],
         key=lambda item: (
             round_sort_index(str(item.get("round", ""))),
             int(item.get("turn_index", 0) or 0),
@@ -460,6 +493,7 @@ def build_timeline_records(
                     "round": str(question.get("round", "") or ""),
                     "stage": "follow_up",
                     "prompt": signature[0],
+                    "spoken_text": "",
                     "response": signature[1],
                     "decision_result": "",
                     "score": None,
@@ -555,6 +589,24 @@ def parse_round_persona_overrides(value: str) -> dict[str, str]:
         if round_key not in ROUND_LABELS:
             raise ValueError(f"Unknown round in persona override: {round_name}")
         overrides[round_key] = resolve_persona_name(persona_name)
+    return overrides
+
+
+def parse_persona_voice_overrides(value: str) -> dict[str, str]:
+    if not value.strip():
+        return {}
+    overrides: dict[str, str] = {}
+    for item in value.split(","):
+        if not item.strip():
+            continue
+        if "=" not in item:
+            raise ValueError(f"Invalid persona voice override: {item}")
+        persona_name, voice_name = item.split("=", 1)
+        resolved_persona = resolve_persona_name(persona_name)
+        resolved_voice = str(voice_name).strip()
+        if not resolved_voice:
+            raise ValueError(f"Voice name cannot be empty in persona voice override: {item}")
+        overrides[resolved_persona] = resolved_voice
     return overrides
 
 
@@ -3184,7 +3236,21 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
           <li>会话状态：<code>{{ zh_status(session.session_status) }}</code></li>
           <li>轮次事件数：<code>{{ session.turn_count }}</code></li>
           <li>TTS 状态：<code>{{ zh_status(session.tts_status) }}</code></li>
+          <li>实时播报：<code>{{ zh_bool(session.input_config.speak_prompts) }}</code></li>
+          <li>TTS 语言：<code>{{ session.input_config.tts_language or 'auto' }}</code></li>
+          <li>TTS 默认音色：<code>{{ session.input_config.tts_voice or 'auto' }}</code></li>
+          <li>TTS 语速：<code>{{ session.input_config.tts_rate or '+0%' }}</code></li>
+          <li>TTS 音高：<code>{{ session.input_config.tts_pitch or '+0Hz' }}</code></li>
+          <li>TTS 音量：<code>{{ session.input_config.tts_volume or '+0%' }}</code></li>
+          <li>TTS 播放后端：<code>{{ session.input_config.tts_playback_backend_resolved or 'disabled' }}</code></li>
         </ul>
+        {% if session.input_config.persona_voice_overrides %}
+        <div class="muted">Persona voices:
+          {% for key, value in session.input_config.persona_voice_overrides.items() %}
+          <code>{{ key }}={{ value }}</code>{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
       <div class="card">
         <h3>关键信号</h3>
@@ -3378,6 +3444,9 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
           <article class="qa-card">
             <h4>{{ loop.index }}. {{ result.title }}</h4>
             <p><strong>题目：</strong>{{ result.question }}</p>
+            {% if result.spoken_question and result.spoken_question != result.question %}
+            <p><strong>实际播报：</strong>{{ zh_internal_text(result.spoken_question) }}</p>
+            {% endif %}
             <p><strong>回答：</strong>{{ result.answer }}</p>
             {% if result.follow_up_chain %}
             <p><strong>追问链路</strong></p>
@@ -3751,6 +3820,12 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
               {% else %}
               <span class="muted">无响应内容</span>
               {% endif %}
+              {% if event.tts_file %}
+              <div class="muted">TTS: <code>{{ event.tts_file }}</code></div>
+              {% endif %}
+              {% if event.spoken_text and event.spoken_text != event.prompt %}
+              <div class="muted">Spoken: {{ zh_internal_text(event.spoken_text) }}</div>
+              {% endif %}
               {% if event.decision_result and event.decision_result != 'pending' %}
               <div class="muted">决策：{{ zh_result_action(event.decision_result) }}</div>
               {% endif %}
@@ -3869,10 +3944,24 @@ def render_failure_summary(path: Path, session_data: dict[str, Any], score_data:
     path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
 
 
-def synthesize_summary_artifacts(output_dir: Path, results: list[QuestionResult], decision: str, voice: str) -> list[str]:
+def synthesize_summary_artifacts(
+    output_dir: Path,
+    results: list[QuestionResult],
+    decision: str,
+    voice: str,
+    *,
+    rate: str = "+0%",
+    pitch: str = "+0Hz",
+    volume: str = "+0%",
+) -> list[str]:
     tts_dir = output_dir / "tts"
     opening = "Welcome to the Android senior interview practice session. We will assess Android fundamentals, architecture, performance, leadership, and evidence quality."
-    questions = " ".join([f"In {ROUND_LABELS.get(result.round, result.round)}, question: {result.question}" for result in results])
+    questions = " ".join(
+        [
+            f"In {ROUND_LABELS.get(result.round, result.round)}, question: {result.spoken_question or result.question}"
+            for result in results
+        ]
+    )
     summary = f"The final decision is {decision}. Please review the written report for detailed strengths, risks, missing evidence, and round level decisions."
     files = [
         ("opening.mp3", opening),
@@ -3881,15 +3970,38 @@ def synthesize_summary_artifacts(output_dir: Path, results: list[QuestionResult]
     ]
     generated: list[str] = []
     for filename, text in files:
-        synthesize_text(text=text, output_path=tts_dir / filename, voice=voice)
+        synthesize_text(
+            text=text,
+            output_path=tts_dir / filename,
+            voice=voice,
+            rate=rate,
+            pitch=pitch,
+            volume=volume,
+        )
         generated.append(str((tts_dir / filename).relative_to(output_dir)))
     return generated
 
 
-def synthesize_turn_prompt(output_dir: Path, turn_index: int, prompt: str, voice: str) -> str:
+def synthesize_turn_prompt(
+    output_dir: Path,
+    turn_index: int,
+    prompt: str,
+    voice: str,
+    *,
+    rate: str = "+0%",
+    pitch: str = "+0Hz",
+    volume: str = "+0%",
+) -> str:
     tts_dir = output_dir / "tts"
     filename = f"turn-{turn_index:03d}.mp3"
-    synthesize_text(text=prompt, output_path=tts_dir / filename, voice=voice)
+    synthesize_text(
+        text=prompt,
+        output_path=tts_dir / filename,
+        voice=voice,
+        rate=rate,
+        pitch=pitch,
+        volume=volume,
+    )
     return str((tts_dir / filename).relative_to(output_dir))
 
 
@@ -3969,6 +4081,7 @@ def session_payload(
         "consistency_summary": consistency_summary or {},
         "question_bank_validation": question_bank_validation or {},
         "resume_prep": resume_prep or {},
+        "question_records": [serialize_question_record(item) for item in results],
         "terminated_early": terminated,
         "termination_reason": hard_fail_flags[0] if hard_fail_flags else "",
         "tts_status": tts_status,
@@ -4008,32 +4121,7 @@ def score_payload(
     summaries = round_summaries or build_round_summaries(results)
     scorecards = round_scorecards or []
     question_payload = [
-        {
-            "id": result.id,
-            "title": result.title,
-            "round": result.round,
-            "turn_index": result.turn_index,
-            "question": result.question,
-            "answer": result.answer,
-            "follow_up_chain": result.follow_up_chain,
-            "score": result.score,
-            "confidence": result.confidence,
-            "strength_evidence": result.strength_evidence,
-            "risk_evidence": result.risk_evidence,
-            "missing_evidence": result.missing_evidence,
-            "decision_result": result.decision_result,
-            "decision_reason": result.decision_reason,
-            "persona": result.persona,
-            "persona_dimensions": result.persona_dimensions,
-            "competencies": result.competencies,
-            "round_focus": result.round_focus,
-            "question_source": result.question_source,
-            "matched_good_signals": result.matched_good_signals,
-            "matched_red_flags": result.matched_red_flags,
-            "expected_signal_hit": result.expected_signal_hit,
-            "question_bank_alignment": result.question_bank_alignment,
-            "source_path": result.source_path,
-        }
+        serialize_question_record(result)
         for result in results
     ]
     return {

@@ -19,6 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mode", default="simulate", choices=["simulate", "screening", "round1", "round2", "round3", "hr"])
     parser.add_argument("--level", default="senior", choices=["mid", "senior", "tl"])
     parser.add_argument("--language", default="en", choices=["zh", "en", "bilingual"])
+    parser.add_argument("--voice", default="", help="Optional explicit TTS voice override.")
+    parser.add_argument("--tts-language", default="auto", choices=["auto", "zh", "en", "bilingual"], help="Speech language for TTS.")
+    parser.add_argument("--tts-rate", default="+0%", help="TTS speech rate.")
+    parser.add_argument("--tts-pitch", default="+0Hz", help="TTS pitch.")
+    parser.add_argument("--tts-volume", default="+0%", help="TTS volume.")
+    parser.add_argument("--persona-voice-overrides", default="", help="Comma-separated persona=voice overrides.")
     parser.add_argument("--pause-after-questions", type=int, default=3, help="Pause after N completed questions in the first run.")
     parser.add_argument("--default-persona", default="", help="Default interviewer persona preset for all rounds.")
     parser.add_argument("--round-persona-overrides", default="", help="Comma-separated round=persona overrides.")
@@ -71,6 +77,18 @@ def main() -> int:
         base_args.extend(["--session-id", args.session_id])
     if args.default_persona:
         base_args.extend(["--default-persona", args.default_persona])
+    if args.voice:
+        base_args.extend(["--voice", args.voice])
+    if args.tts_language:
+        base_args.extend(["--tts-language", args.tts_language])
+    if args.tts_rate:
+        base_args.extend(["--tts-rate", args.tts_rate])
+    if args.tts_pitch:
+        base_args.extend(["--tts-pitch", args.tts_pitch])
+    if args.tts_volume:
+        base_args.extend(["--tts-volume", args.tts_volume])
+    if args.persona_voice_overrides:
+        base_args.extend(["--persona-voice-overrides", args.persona_voice_overrides])
     if args.round_persona_overrides:
         base_args.extend(["--round-persona-overrides", args.round_persona_overrides])
     if args.round_language_overrides:
