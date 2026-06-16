@@ -1,0 +1,93 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "mist-river",
+      "promptFiles": [
+        "mist-river.md"
+      ],
+      "image": "../../assets/generated/styles/bg-mist-river.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "lotus-pond",
+      "promptFiles": [
+        "lotus-pond.md"
+      ],
+      "image": "../../assets/generated/styles/bg-lotus-pond.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "pine-temple",
+      "promptFiles": [
+        "pine-temple.md"
+      ],
+      "image": "../../assets/generated/styles/bg-pine-temple.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "desert-pass",
+      "promptFiles": [
+        "desert-pass.md"
+      ],
+      "image": "../../assets/generated/styles/bg-desert-pass.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "palace-moon",
+      "promptFiles": [
+        "palace-moon.md"
+      ],
+      "image": "../../assets/generated/styles/bg-palace-moon.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "orchid-window",
+      "promptFiles": [
+        "orchid-window.md"
+      ],
+      "image": "../../assets/generated/styles/bg-orchid-window.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "peach-spring",
+      "promptFiles": [
+        "peach-spring.md"
+      ],
+      "image": "../../assets/generated/styles/bg-peach-spring.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "maple-bridge",
+      "promptFiles": [
+        "maple-bridge.md"
+      ],
+      "image": "../../assets/generated/styles/bg-maple-bridge.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

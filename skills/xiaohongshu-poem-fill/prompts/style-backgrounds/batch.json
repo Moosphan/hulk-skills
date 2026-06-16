@@ -1,0 +1,170 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "ink-mountain",
+      "promptFiles": [
+        "ink-mountain.md"
+      ],
+      "image": "../../assets/generated/styles/bg-ink-mountain.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "snow-lamp",
+      "promptFiles": [
+        "snow-lamp.md"
+      ],
+      "image": "../../assets/generated/styles/bg-snow-lamp.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "bamboo-tea",
+      "promptFiles": [
+        "bamboo-tea.md"
+      ],
+      "image": "../../assets/generated/styles/bg-bamboo-tea.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "moon-boat",
+      "promptFiles": [
+        "moon-boat.md"
+      ],
+      "image": "../../assets/generated/styles/bg-moon-boat.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "plum-cold",
+      "promptFiles": [
+        "plum-cold.md"
+      ],
+      "image": "../../assets/generated/styles/bg-plum-cold.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "paper-minimal",
+      "promptFiles": [
+        "paper-minimal.md"
+      ],
+      "image": "../../assets/generated/styles/bg-paper-minimal.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "old-book",
+      "promptFiles": [
+        "old-book.md"
+      ],
+      "image": "../../assets/generated/styles/bg-old-book.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "mist-river",
+      "promptFiles": [
+        "mist-river.md"
+      ],
+      "image": "../../assets/generated/styles/bg-mist-river.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "lotus-pond",
+      "promptFiles": [
+        "lotus-pond.md"
+      ],
+      "image": "../../assets/generated/styles/bg-lotus-pond.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "pine-temple",
+      "promptFiles": [
+        "pine-temple.md"
+      ],
+      "image": "../../assets/generated/styles/bg-pine-temple.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "desert-pass",
+      "promptFiles": [
+        "desert-pass.md"
+      ],
+      "image": "../../assets/generated/styles/bg-desert-pass.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "palace-moon",
+      "promptFiles": [
+        "palace-moon.md"
+      ],
+      "image": "../../assets/generated/styles/bg-palace-moon.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "orchid-window",
+      "promptFiles": [
+        "orchid-window.md"
+      ],
+      "image": "../../assets/generated/styles/bg-orchid-window.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "peach-spring",
+      "promptFiles": [
+        "peach-spring.md"
+      ],
+      "image": "../../assets/generated/styles/bg-peach-spring.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "maple-bridge",
+      "promptFiles": [
+        "maple-bridge.md"
+      ],
+      "image": "../../assets/generated/styles/bg-maple-bridge.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

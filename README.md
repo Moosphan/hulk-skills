@@ -1,5 +1,5 @@
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.zh-CN.md)
-[![Skills](https://img.shields.io/badge/Skills-3-green)](./README.zh-CN.md)
+[![Skills](https://img.shields.io/badge/Skills-4-green)](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@ It is designed to turn repeatable engineering, content, automation, and producti
 
 ## Highlights
 
-- 3 skills: `word-counter`, `readme-generator`, and `android-interview`
+- 4 skills: `word-counter`, `readme-generator`, `android-interview`, and `xiaohongshu-poem-fill`
 - Dual-platform scenario validation for `Claude Code` and `Codex`
 - Buildable install packages for both platforms
 - GitHub Release artifacts and CI validation
@@ -34,7 +34,9 @@ The repository follows a simple source-first model:
 hulk-skills/
 ├── .github/workflows/
 ├── skills/
+│   ├── android-interview/
 │   ├── readme-generator/
+│   ├── xiaohongshu-poem-fill/
 │   └── word-counter/
 ├── tests/
 │   └── scenarios/
@@ -49,6 +51,7 @@ hulk-skills/
 - `word-counter` - deterministic Chinese / English / mixed text counting
 - `readme-generator` - evidence-first README generation and refactoring
 - `android-interview` - structured Android mock interviews with local reports and TTS artifacts
+- `xiaohongshu-poem-fill` - Xiaohongshu poem-fill post generation with original classical-style lines, hashtag sets, and optional local cover rendering
 
 ## Validation And Packaging
 

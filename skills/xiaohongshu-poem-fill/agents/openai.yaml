@@ -1,0 +1,7 @@
+interface:
+  display_name: "Xiaohongshu Poem Fill"
+  short_description: "Create poem-fill Xiaohongshu posts and render reusable Chinese cover cards"
+  default_prompt: "Use this skill to draft interactive Xiaohongshu poem-fill posts, generate original classical-style lines, and optionally render covers with the local template-based script."
+
+policy:
+  allow_implicit_invocation: true
