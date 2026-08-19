@@ -1,5 +1,5 @@
 [![平台](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.md)
-[![Skill 数量](https://img.shields.io/badge/Skills-4-green)](./README.md)
+[![Skill 数量](https://img.shields.io/badge/Skills-6-green)](./README.md)
 [![协议](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@
 
 ## 项目亮点
 
-- 当前包含 4 个 skill：`word-counter`、`readme-generator`、`android-interview` 和 `xiaohongshu-poem-fill`
+- 当前包含 6 个 skill：`word-counter`、`readme-generator`、`android-interview`、`xiaohongshu-poem-fill`、`food-recipe-post` 和 `daily-outfit-social-post`
 - 覆盖 `Claude Code` 与 `Codex` 的真实场景验证
 - 可以构建两平台的可安装 skill 包
 - 已接入 GitHub Actions 校验与 GitHub Release 产物发布
@@ -35,6 +35,8 @@ hulk-skills/
 ├── .github/workflows/
 ├── skills/
 │   ├── android-interview/
+│   ├── daily-outfit-social-post/
+│   ├── food-recipe-post/
 │   ├── readme-generator/
 │   ├── xiaohongshu-poem-fill/
 │   └── word-counter/
@@ -52,6 +54,8 @@ hulk-skills/
 - `readme-generator` - 用于基于仓库证据生成或重构 README
 - `android-interview` - 用于结构化 Android 模拟面试、本地报告与 TTS 语音产物生成
 - `xiaohongshu-poem-fill` - 用于生成小红书诗词填空类笔记，包含原创古风短诗、话题标签与可选本地封面渲染
+- `food-recipe-post` - 迁移后的每日菜谱社媒作品生成流程，用于小红书/抖音单菜或多菜推荐，包含 baoyu-imagine 封面提示词、明亮手写体封面风格和 500 字以内中文制作正文
+- `daily-outfit-social-post` - 用于生成小红书/抖音每日穿搭作品，包含固定博主人设、摄影级穿搭图、连续性约束和短中文标题正文
 
 ## 本地校验与构建
 

@@ -1,5 +1,5 @@
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.zh-CN.md)
-[![Skills](https://img.shields.io/badge/Skills-4-green)](./README.zh-CN.md)
+[![Skills](https://img.shields.io/badge/Skills-6-green)](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@ It is designed to turn repeatable engineering, content, automation, and producti
 
 ## Highlights
 
-- 4 skills: `word-counter`, `readme-generator`, `android-interview`, and `xiaohongshu-poem-fill`
+- 6 skills: `word-counter`, `readme-generator`, `android-interview`, `xiaohongshu-poem-fill`, `food-recipe-post`, and `daily-outfit-social-post`
 - Dual-platform scenario validation for `Claude Code` and `Codex`
 - Buildable install packages for both platforms
 - GitHub Release artifacts and CI validation
@@ -35,6 +35,8 @@ hulk-skills/
 ├── .github/workflows/
 ├── skills/
 │   ├── android-interview/
+│   ├── daily-outfit-social-post/
+│   ├── food-recipe-post/
 │   ├── readme-generator/
 │   ├── xiaohongshu-poem-fill/
 │   └── word-counter/
@@ -52,6 +54,8 @@ hulk-skills/
 - `readme-generator` - evidence-first README generation and refactoring
 - `android-interview` - structured Android mock interviews with local reports and TTS artifacts
 - `xiaohongshu-poem-fill` - Xiaohongshu poem-fill post generation with original classical-style lines, hashtag sets, and optional local cover rendering
+- `food-recipe-post` - migrated daily recipe social post workflow for Xiaohongshu/Douyin, with baoyu-imagine cover prompts, bright handwritten cover style, and short Chinese cooking copy
+- `daily-outfit-social-post` - Xiaohongshu/Douyin OOTD post workflow with fixed creator persona, photorealistic outfit images, continuity locks, and short Chinese captions
 
 ## Validation And Packaging
 

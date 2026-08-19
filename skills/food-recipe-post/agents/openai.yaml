@@ -1,0 +1,4 @@
+interface:
+  display_name: "Daily Recipe Social Post"
+  short_description: "生成单菜或多菜小红书抖音菜谱封面与正文"
+  default_prompt: "Use $daily-recipe-social-post to create a single-dish or multi-dish daily recipe recommendation for Xiaohongshu and Douyin."

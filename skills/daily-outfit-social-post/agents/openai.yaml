@@ -1,0 +1,4 @@
+interface:
+  display_name: "Daily Outfit Social Post"
+  short_description: "用固定博主人设生成中文穿搭封面与短文案"
+  default_prompt: "使用 $daily-outfit-social-post 生成固定博主人设的小红书抖音穿搭作品，包含20字以内中文标题、封面图和100字以内中文正文。"
