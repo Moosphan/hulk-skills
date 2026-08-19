@@ -18,9 +18,16 @@ python3 skills/xiaohongshu-poem-fill/scripts/render_xhs_cover.py --style paper-m
 
 ## Font Notes
 
-The script supports preset names such as:
+The following portable open-source presets are bundled with the skill. They are all
+licensed under SIL Open Font License 1.1 and can be used when the skill is moved to
+another machine:
 
-- `shangwei`
+- `zcool-xiaowei` (default): poised, high-contrast display text for classical covers
+- `lxgw-wenkai`: soft and literary handwritten feel
+- `mashanzheng`: measured calligraphic display text
+
+The script also supports locally installed presets such as:
+
 - `xingkai`
 - `kaiti`
 - `fangsong`
@@ -31,6 +38,8 @@ The script supports preset names such as:
 - `songti-regular`
 - `songti-bold`
 - `pingfang`
+
+`shangwei` is intentionally not supported and must not be used for future covers.
 
 If a requested preset is unavailable on the local machine, the script falls back to an available Songti preset.
 

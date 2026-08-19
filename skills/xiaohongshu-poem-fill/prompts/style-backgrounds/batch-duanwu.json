@@ -1,0 +1,16 @@
+{
+  "jobs": 1,
+  "tasks": [
+    {
+      "id": "duanwu-river",
+      "promptFiles": [
+        "duanwu-river.md"
+      ],
+      "image": "../../assets/generated/styles/bg-duanwu-river.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

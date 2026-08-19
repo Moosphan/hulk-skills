@@ -1,0 +1,71 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "apricot-courtyard",
+      "promptFiles": [
+        "apricot-courtyard.md"
+      ],
+      "image": "../../assets/generated/styles/bg-apricot-courtyard.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "bridge-moss",
+      "promptFiles": [
+        "bridge-moss.md"
+      ],
+      "image": "../../assets/generated/styles/bg-bridge-moss.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "chrysanthemum-fence",
+      "promptFiles": [
+        "chrysanthemum-fence.md"
+      ],
+      "image": "../../assets/generated/styles/bg-chrysanthemum-fence.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "ink-bamboo-hall",
+      "promptFiles": [
+        "ink-bamboo-hall.md"
+      ],
+      "image": "../../assets/generated/styles/bg-ink-bamboo-hall.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "mulberry-rain",
+      "promptFiles": [
+        "mulberry-rain.md"
+      ],
+      "image": "../../assets/generated/styles/bg-mulberry-rain.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "seal-stone",
+      "promptFiles": [
+        "seal-stone.md"
+      ],
+      "image": "../../assets/generated/styles/bg-seal-stone.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

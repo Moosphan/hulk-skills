@@ -1,0 +1,93 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "ancient-altar",
+      "promptFiles": [
+        "ancient-altar.md"
+      ],
+      "image": "../../assets/generated/styles/bg-ancient-altar.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "bronze-incense",
+      "promptFiles": [
+        "bronze-incense.md"
+      ],
+      "image": "../../assets/generated/styles/bg-bronze-incense.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "cinnabar-pavilion",
+      "promptFiles": [
+        "cinnabar-pavilion.md"
+      ],
+      "image": "../../assets/generated/styles/bg-cinnabar-pavilion.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "jade-terrace",
+      "promptFiles": [
+        "jade-terrace.md"
+      ],
+      "image": "../../assets/generated/styles/bg-jade-terrace.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "lotus-lantern",
+      "promptFiles": [
+        "lotus-lantern.md"
+      ],
+      "image": "../../assets/generated/styles/bg-lotus-lantern.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "qin-table",
+      "promptFiles": [
+        "qin-table.md"
+      ],
+      "image": "../../assets/generated/styles/bg-qin-table.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "willow-ferry",
+      "promptFiles": [
+        "willow-ferry.md"
+      ],
+      "image": "../../assets/generated/styles/bg-willow-ferry.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "yun-brocade",
+      "promptFiles": [
+        "yun-brocade.md"
+      ],
+      "image": "../../assets/generated/styles/bg-yun-brocade.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

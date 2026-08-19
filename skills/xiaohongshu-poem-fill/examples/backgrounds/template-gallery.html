@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>古风封面模板总览</title>
+  <style>
+    :root {
+      --paper: #f3ede3;
+      --ink: #3b3128;
+      --ink-soft: #6d5f50;
+      --line: rgba(99, 80, 60, 0.18);
+      --card: rgba(255, 252, 247, 0.8);
+      --shadow: 0 18px 40px rgba(84, 66, 45, 0.12);
+      --accent: #8a6a4b;
+      --accent-soft: #a88763;
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top, rgba(187, 163, 130, 0.15), transparent 36%),
+        linear-gradient(180deg, #f8f3ea 0%, #efe5d6 48%, #f6efe4 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1480px, calc(100vw - 48px));
+      margin: 0 auto;
+      padding: 44px 0 80px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 34px 34px 28px;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.66), rgba(247,239,226,0.78)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='rgba(120,92,58,0.08)' stroke-width='1'%3E%3Cpath d='M10 60 Q30 36 50 60 T90 60 T130 60'/%3E%3Cpath d='M-10 84 Q10 60 30 84 T70 84 T110 84 T150 84'/%3E%3C/g%3E%3C/svg%3E");
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -56px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(177, 137, 92, 0.18), transparent 72%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(118, 90, 60, 0.18);
+      background: rgba(255,255,255,0.45);
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+      font-size: clamp(34px, 4vw, 52px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      margin: 14px 0 18px;
+      max-width: 900px;
+      color: var(--ink-soft);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .meta span {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.58);
+      border: 1px solid rgba(118, 90, 60, 0.14);
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+
+    .section-title {
+      margin: 34px 4px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Songti SC", "STSong", serif;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 36px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(106, 80, 49, 0.55));
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(123, 93, 61, 0.3);
+      box-shadow: 0 22px 42px rgba(84, 66, 45, 0.16);
+    }
+
+    .thumb {
+      overflow: hidden;
+      border-radius: 18px;
+      background: #efe6d7;
+      border: 1px solid rgba(122, 95, 63, 0.14);
+    }
+
+    .thumb img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+    }
+
+    .name {
+      font-family: "Songti SC", "STSong", serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .slug {
+      margin-top: -6px;
+      color: var(--accent-soft);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .date {
+      margin-top: -8px;
+      color: var(--accent-soft);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+
+    .caption {
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.7;
+      min-height: 48px;
+    }
+
+    .footer {
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px dashed rgba(123, 93, 61, 0.18);
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    code {
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        width: min(100vw - 24px, 1480px);
+        padding-top: 24px;
+      }
+
+      .hero {
+        padding: 24px 20px 20px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .name {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Xiaohongshu Template Gallery</div>
+      <h1>古风诗词封面模板总览</h1>
+      <p class="subtitle">
+        这里收纳当前 skill 中全部可复用的古风背景模板，统一按小红书竖版封面比例展示。每张卡片都附带中文名称、模板 id 与简短意境说明，方便筛选、复用和沟通。
+      </p>
+      <div class="meta">
+        <span>模板总数：150</span>
+        <span>比例：3:4 竖版</span>
+        <span>用途：诗词填空 / 古风短句 / 诗词封面</span>
+      </div>
+    </section>
+
+    <div class="section-title">模板列表</div>
+    <section class="grid" id="gallery"></section>
+
+    <div class="footer">
+      本页文件位置：
+      <code>/Users/dorck/Documents/hulk-skills/skills/xiaohongshu-poem-fill/examples/backgrounds/template-gallery.html</code><br />
+      背景模板目录：
+      <code>/Users/dorck/Documents/hulk-skills/skills/xiaohongshu-poem-fill/assets/generated/styles</code>
+    </div>
+  </div>
+
+  <script>
+    const base = "/Users/dorck/Documents/hulk-skills/skills/xiaohongshu-poem-fill/assets/generated/styles/";
+    const templates = [
+      ["ancient-altar", "古坛遗痕", "浅赭祭坛与苍茫石面庄重沉静，适合上古、礼制、肃穆题材。", "2026-06-17"],
+      ["ancient-well", "古井苔痕", "深院旧宅、石井水影、古拙安静，适合旧事、书窗、怀古题材。", "2026-06-22"],
+      ["apricot-courtyard", "杏院春晓", "粉墙杏枝与石阶春光清新含蓄，适合春晨、小院、晴暖题材。", "2026-06-17"],
+      ["autumn-reeds", "长汀秋苇", "平沙远水与芦苇晚色，适合羁旅、秋思、江岸题材。", "2026-06-22"],
+      ["bamboo-tea", "竹影茶席", "竹叶、茶烟与温润留白，适合清谈、闲居、雨后小景。", "2026-06-16"],
+      ["begonia-screen", "海棠春屏", "海棠花影与隐约古屏雅致温润，适合春日、新喜、闺阁题材。", "2026-06-24"],
+      ["blue-peaks", "远山层青", "层叠远山与温润青色，适合登高、望远、山水小诗。", "2026-06-22"],
+      ["bridge-moss", "古桥苔痕", "湿润青石与初雨薄雾旧雅含蓄，适合江南、旧桥、雨后题材。", "2026-06-17"],
+      ["bronze-incense", "青铜香篆", "博山炉影与细细香烟古雅沉静，适合书房、清修、雅集题材。", "2026-06-17"],
+      ["candle-study", "寒窗烛读", "烛影书案、夜读静气，适合读书、志向、功名题材。", "2026-06-22"],
+      ["cedar-court", "杉庭晨雾", "高杉树影与旧白院墙清峻冷静，适合山居、寺院、清晨题材。", "2026-06-17"],
+      ["chrysanthemum-fence", "东篱秋菊", "竹篱秋菊与田园归隐气息温淡，适合秋篱、归居、闲情题材。", "2026-06-17"],
+      ["cinnabar-pavilion", "朱栏水榭", "朱栏一点与远山雾色雅致克制，适合亭台、临水、古画题材。", "2026-06-17"],
+      ["citrus-court", "橘庭清香", "金橘小树与庭院晨光温润吉祥，适合丰足、团圆、家宅题材。", "2026-06-24"],
+      ["cloud-cliff", "高崖云海", "崖影与云海相接，适合高远、登临、壮阔意境。", "2026-06-22"],
+      ["crane-marsh", "鹤汀秋水", "秋水芦洲与远鹤空灵高远，适合汀洲、秋水、清远题材。", "2026-06-17"],
+      ["cypress-steps", "石阶古柏", "山门古柏、石阶肃静，适合寺观、晨钟、归山题材。", "2026-06-22"],
+      ["desert-pass", "大漠关山", "边塞黄沙与孤城意象，适合关山、壮怀、远行题材。", "2026-06-16"],
+      ["fishing-wharf", "渔埠清晨", "木埠、渔舟与晨雾，适合江湖、清晨、归泊题材。", "2026-06-22"],
+      ["frost-grove", "霜林晓色", "冷红疏林与晨霜，适合秋冬、晓行、清寒题材。", "2026-06-22"],
+      ["golden-fields", "秋野稻香", "平野稻浪与远村丰年，适合田园、归家、丰收题材。", "2026-06-22"],
+      ["golden-koi", "锦鲤晴池", "浅青池水与金红锦鲤明净灵动，适合吉庆、生机、晴日题材。", "2026-06-24"],
+      ["grotto-lamp", "石窟佛灯", "岩壁肌理与微小暖灯庄重幽静，适合古窟、静修、深山题材。", "2026-06-17"],
+      ["ink-bamboo-hall", "墨竹书堂", "疏朗墨竹与书堂窗影清简文雅，适合书房、题咏、清谈题材。", "2026-06-17"],
+      ["ink-mountain", "水墨山居", "淡墨远山与宣纸留白，适合山居、静坐、夜读题材。", "2026-06-16"],
+      ["jade-terrace", "玉阶月庭", "青白石阶与清寒月色高洁清冷，适合宫苑、夜色、月庭题材。", "2026-06-17"],
+      ["lake-pavilion", "湖心小亭", "湖亭远影与空阔水面，适合泛湖、对坐、闲适题材。", "2026-06-22"],
+      ["lantern-street", "花灯长街", "暖金花灯与古街檐影柔和明净，适合节序、团圆、欢喜题材。", "2026-06-24"],
+      ["lotus-lantern", "莲灯夜水", "黛水微波与一盏小小莲灯空灵安静，适合节序、夜渡、民俗题材。", "2026-06-17"],
+      ["lotus-pond", "荷塘听雨", "荷叶、水纹与雨痕轻响，适合夏日、清凉、晚风题材。", "2026-06-16"],
+      ["magpie-branch", "鹊栖高枝", "疏枝与小喜鹊点景，适合清晨、新喜、吉兆题材。", "2026-06-22"],
+      ["magnolia-lane", "玉兰晴巷", "白玉兰与旧墙小巷清朗洁净，适合春晨、雅居、好风光题材。", "2026-06-24"],
+      ["maple-bridge", "枫桥秋色", "秋枫、桥影与江岸暮色，适合秋夜、旅思、客舟题材。", "2026-06-16"],
+      ["mist-river", "江南烟雨", "水巷、雨丝与乌篷远影，适合江南、雨巷、柔婉题材。", "2026-06-16"],
+      ["moon-boat", "月下归舟", "月色、江波与小舟归意，适合夜泊、归思、清梦题材。", "2026-06-16"],
+      ["moor-lake", "荒汀野泊", "沙洲浅水与低芦孤意，适合羁旅、泊舟、暮色题材。", "2026-06-22"],
+      ["mulberry-rain", "桑陌细雨", "田埂薄雨与桑树轮廓温和宁静，适合乡野、春夏、民歌题材。", "2026-06-17"],
+      ["old-book", "旧书页复古", "旧页、纸纹与微暖书卷感，适合读书、怀旧、雅玩题材。", "2026-06-16"],
+      ["osmanthus-court", "桂庭清露", "细小金桂与晨露庭院温润安宁，适合圆满、秋庭、幽香题材。", "2026-06-24"],
+      ["orchid-window", "兰亭雅集", "兰草、窗影与书案气息，适合雅集、兰室、幽静题材。", "2026-06-16"],
+      ["palace-moon", "宫墙月影", "朱墙、月影与竹影轻投，适合宫苑、夜色、清冷题材。", "2026-06-16"],
+      ["paper-minimal", "宣纸极简", "纯净纸纹与轻淡墨痕，适合留白感强的任何诗词句面。", "2026-06-16"],
+      ["peach-spring", "桃花春水", "桃枝与春水一线轻粉，适合春日、轻梦、晴暖题材。", "2026-06-16"],
+      ["pear-rain", "梨花微雨", "白花与细雨气息素净，适合春寒、相思、清润题材。", "2026-06-22"],
+      ["peony-terrace", "牡丹晴阶", "石阶牡丹与清朗日光华美克制，适合盛景、美满、富贵题材。", "2026-06-24"],
+      ["pine-temple", "松风古寺", "松影、山门与钟声感，适合山寺、清修、晚钟题材。", "2026-06-16"],
+      ["plum-cold", "梅枝冷香", "冷白与一点梅红，适合雪夜、孤清、寒香题材。", "2026-06-16"],
+      ["pomegranate-window", "榴花映窗", "石榴花映照窗棂鲜润明媚，适合夏日、兴盛、家常题材。", "2026-06-24"],
+      ["qin-table", "古琴书案", "长案古琴与茶盏淡影文气十足，适合雅集、琴心、书斋题材。", "2026-06-17"],
+      ["reed-frost", "霜晨芦苇", "浅霜水岸与细长芦苇清冷素净，适合北地、秋冬、晓寒题材。", "2026-06-17"],
+      ["river-maple", "江岸秋枫", "秋枫、江岸与一点暮色，适合秋兴、客舟、夜泊题材。", "2026-06-22"],
+      ["sand-moon", "大漠月夜", "沙岭、夜月与边塞空阔，适合关山、远行、壮思题材。", "2026-06-22"],
+      ["seal-stone", "朱砂印石", "印章轮廓与旧案墨痕金石味浓，适合书斋、题跋、古雅题材。", "2026-06-17"],
+      ["snow-lamp", "雪夜孤灯", "雪点、冷窗与一点灯光，适合冬夜、读书、怀人题材。", "2026-06-16"],
+      ["spring-fair", "花朝小集", "春市花影与远处摊景轻快明朗，适合节序、游春、欢聚题材。", "2026-06-24"],
+      ["spring-mountain", "春山新翠", "新山、轻雾与一线远水，适合春行、登临、明净题材。", "2026-06-22"],
+      ["spring-oriole", "柳塘黄莺", "柳丝、浅塘与小黄莺，适合春晓、晴日、生机题材。", "2026-06-22"],
+      ["swallow-eaves", "燕归画檐", "飞檐与归燕轻快喜悦，适合春信、归来、好消息题材。", "2026-06-24"],
+      ["tidal-pavilion", "海亭潮声", "雾蓝潮线与栏影小亭空阔微凉，适合临海、晚风、远望题材。", "2026-06-17"],
+      ["tower-sunset", "古楼晚照", "高楼、夕照与远天层云，适合登楼、怀古、晚望题材。", "2026-06-22"],
+      ["water-town", "水乡石桥", "白墙、石桥与薄雾河道，适合水乡、行旅、烟景题材。", "2026-06-22"],
+      ["willow-ferry", "柳渡春晨", "垂柳古渡与远处小舟温润疏淡，适合江南、春水、送别题材。", "2026-06-17"],
+      ["winter-plum", "雪地寒梅", "雪地、瘦梅与冷白留白，适合冬意、孤洁、寒窗题材。", "2026-06-22"],
+      ["wisteria-wall", "紫藤花墙", "旧白墙与稀疏紫藤轻盈雅净，适合春日、花事、庭院题材。", "2026-06-17"],
+      ["yun-brocade", "云锦旧绢", "暗花织纹与旧绢质感雅致华贵，适合宫廷、锦绣、华章题材。", "2026-06-17"],
+      ["banana-window", "晴蕉书窗", "芭蕉叶与旧窗构成清润夏日书房感，适合闲读、听雨、清夏题材。", "2026-06-30"],
+      ["begonia-court", "海棠小院", "粉墙石阶与淡海棠晨光温润，适合春庭、闺阁、晴日题材。", "2026-06-30"],
+      ["camellia-screen", "茶花锦屏", "古屏与山茶花端雅温润，适合闺阁、雅集、春日吉庆题材。", "2026-06-30"],
+      ["citrus-patio", "金橘晴庭", "小橘树与晴庭光影温暖吉祥，适合丰足、团圆、宅院题材。", "2026-06-30"],
+      ["lantern-fair", "花灯夜巷", "檐角花灯与暖夜古巷喜庆温柔，适合节序、团圆、游赏题材。", "2026-06-30"],
+      ["magnolia-steps", "玉兰石阶", "白玉兰与石阶院墙明朗雅静，适合春庭、书香、晴晨题材。", "2026-06-30"],
+      ["osmanthus-veranda", "桂子长廊", "长廊桂香与秋日清朗圆满气息，适合桂月、团圆、幽香题材。", "2026-06-30"],
+      ["peony-rail", "牡丹朱栏", "牡丹与朱栏构成华美而克制的春景，适合富贵、盛景、明媚题材。", "2026-06-30"],
+      ["pomegranate-bloom", "榴花小窗", "石榴花映窗鲜润明媚，适合夏日、家常、兴盛题材。", "2026-06-30"],
+      ["wisteria-porch", "紫藤花廊", "淡紫藤花与长廊轻盈雅净，适合花事、暮春、庭园题材。", "2026-06-30"],
+      ["azure-cascade", "碧瀑晴岚", "远山清瀑与晴岚空气开阔清爽，适合山行、盛夏、灵秀题材。", "2026-06-30"],
+      ["cloud-terrace", "云台晓色", "高台云海与晨光高远明净，适合登临、朝霞、壮阔题材。", "2026-06-30"],
+      ["crane-islet", "晴汀白鹤", "沙洲浅水与白鹤空灵高洁，适合清远、雅意、吉祥题材。", "2026-06-30"],
+      ["jade-river", "玉溪晴波", "清溪圆石与浅浅柳影灵秀通透，适合晴溪、春水、清游题材。", "2026-06-30"],
+      ["luminous-peak", "晴峦流光", "山脊被晨光轻轻照亮，适合登高、开阔、昂扬题材。", "2026-06-30"],
+      ["pine-waterfall", "松涧飞泉", "苍松山涧与一线飞泉清爽明快，适合避暑、山中、清凉题材。", "2026-06-30"],
+      ["sunrise-harbor", "朝港帆影", "晨曦水港与远帆启程感，适合希望、顺遂、远行题材。", "2026-06-30"],
+      ["sunset-ridge", "霞岭晴岫", "暖霞轻罩层岭而不萧瑟，适合归山、晴晚、明朗题材。", "2026-06-30"],
+      ["terrace-fields", "陇田春晴", "层叠梯田与浅青田水生机盎然，适合丰年、春晴、乡野题材。", "2026-06-30"],
+      ["willow-lake", "柳堤晴湖", "柳丝、浅桥与明净湖面温柔清丽，适合春湖、烟景、轻游题材。", "2026-06-30"],
+      ["jade-gorge", "玉峡晴岚", "峡谷溪桥与晨岚清润开阔，适合山行、清游、朗润题材。", "2026-06-30"],
+      ["pine-ridge", "松岭朝晖", "苍松山岭被晨光照亮，适合登高、昂扬、晴日题材。", "2026-06-30"],
+      ["misty-falls", "云瀑空山", "高崖飞瀑与薄雾层岚空灵清爽，适合避暑、远望、灵秀题材。", "2026-06-30"],
+      ["orchid-valley", "兰谷春深", "幽谷兰草与浅溪春色雅净，适合清芬、山居、静赏题材。", "2026-06-30"],
+      ["peach-peak", "桃岭晴霞", "桃花山岭与暖霞相映明媚，适合春山、喜气、游赏题材。", "2026-06-30"],
+      ["bamboo-brook", "竹溪新雨", "修竹沿溪与新雨初歇清凉生动，适合夏日、听泉、清心题材。", "2026-06-30"],
+      ["crane-cliff", "鹤崖晴雪", "明净山崖与白鹤远影高洁吉雅，适合清远、瑞意、冬晴题材。", "2026-06-30"],
+      ["maple-glen", "丹岫流晖", "层林山坳受暖阳映照明朗丰润，适合秋游、丰美、晚照题材。", "2026-06-30"],
+      ["plum-ravine", "梅涧晨光", "溪涧疏梅与晨色相生清丽含蓄，适合早春、幽香、清晓题材。", "2026-06-30"],
+      ["terrace-cloud", "层台云晓", "山台云海与曙色高远明净，适合登临、朝气、壮阔题材。", "2026-06-30"],
+      ["willow-stream", "柳溪晴沙", "浅溪柳影与细沙洲渚温柔通透，适合春水、轻游、闲情题材。", "2026-06-30"],
+      ["golden-summit", "金顶瑞光", "远峰受日光轻覆祥和开朗，适合吉兆、开阔、祝愿题材。", "2026-06-30"],
+      ["lotus-gorge", "荷风山塘", "山间清塘与荷叶微风兼具灵秀与夏意，适合夏游、清芬、明净题材。", "2026-06-30"],
+      ["apricot-ridge", "杏岭春岚", "杏花点岭与淡岚柔润明快，适合春山、晴暖、好意境题材。", "2026-06-30"],
+      ["moonlit-pass", "月岭澄辉", "澄明月色照见安静山道，不冷寂而清华，适合夜游、静美、清辉题材。", "2026-06-30"],
+      ["jade-bay", "玉湾晴岚", "青绿山色与浅湾清水相映，适合清游、晴景、朗润题材。", "2026-07-05"],
+      ["pine-court", "松庭晓色", "古松、山庭与晨光相合，适合山居、书卷、清晨题材。", "2026-07-05"],
+      ["cloud-rill", "云溪晴润", "浅溪、小瀑与轻云灵秀明净，适合山行、清游、夏日题材。", "2026-07-05"],
+      ["lotus-brook", "荷溪晓风", "山溪疏荷与晓风水纹清润柔雅，适合夏日、清芬、轻游题材。", "2026-07-05"],
+      ["peach-ford", "桃渡春明", "桃花、小桥与晴暖春光明媚喜悦，适合春游、桃源、游赏题材。", "2026-07-05"],
+      ["willow-bank", "柳岸春晴", "垂柳浅水与柔和天光温柔清丽，适合春湖、轻游、烟景题材。", "2026-07-05"],
+      ["bamboo-dawn", "竹径朝岚", "修竹、石阶与晨岚清凉雅静，适合山居、读书、清晨题材。", "2026-07-05"],
+      ["amber-harbor", "晴港流光", "明丽水港与晨光远山开阔顺遂，适合启程、远行、希望题材。", "2026-07-05"],
+      ["orchid-terrace", "兰台春静", "兰草山台与浅水远山文雅秀逸，适合雅集、兰室、春日题材。", "2026-07-05"],
+      ["crane-cove", "鹤汀朝霁", "浅汀白鹤与晨雾山影高洁吉雅，适合清远、瑞意、晴晨题材。", "2026-07-05"],
+      ["sunlit-ridge", "晴岭流金", "层岭暖阳与淡云相照，适合登临、开阔、祝愿题材。", "2026-07-05"],
+      ["apricot-basin", "杏谷微晴", "杏花浅谷与春水云气柔亮盎然，适合春山、柔婉、好景题材。", "2026-07-05"],
+      ["vermilion-pavilion", "朱阁山晴", "远山临水小阁华雅克制，适合亭台、山水、晴日题材。", "2026-07-05"],
+      ["jade-cascade", "玉瀑轻岚", "高崖小瀑与青石薄雾灵秀通透，适合盛夏、清凉、山中题材。", "2026-07-05"],
+      ["osmanthus-hill", "桂岭晴秋", "桂树点景与澄澈秋光圆满清朗，适合桂月、秋庭、幽香题材。", "2026-07-05"],
+      ["wisteria-mount", "紫藤山亭", "山亭紫藤与春末晴光轻盈雅净，适合花事、庭园、暮春题材。", "2026-07-05"],
+      ["golden-stream", "金溪明照", "明净溪流与暖光山石温润灵动，适合晴溪、轻游、灵秀题材。", "2026-07-05"],
+      ["mist-hall", "云堂晴晓", "楼台远山与晨辉轻云高雅明朗，适合登临、雅集、朝气题材。", "2026-07-05"],
+      ["cinnabar-bay", "朱湾春照", "水湾朱栏与花木春光喜悦温暖，适合团圆、春日、宅院题材。", "2026-07-05"],
+      ["spring-parapet", "春阑山色", "栏杆花影与晴空远山轻快疏朗，适合春日、游园、短句题材。", "2026-07-05"],
+      ["pearl-river", "珠江晓影", "澄澈江面与远舟浅桥清丽开阔，适合顺遂、启程、江景题材。", "2026-07-05"],
+      ["clear-summit", "晴峰玉照", "高峰淡云与清气晨光昂扬明净，适合登高、壮阔、祝愿题材。", "2026-07-05"],
+      ["camellia-brook", "茶溪春暖", "山溪山茶与晴光石面端雅温润，适合春日、吉庆、清游题材。", "2026-07-05"],
+      ["magnolia-ridge", "玉兰晴峤", "白玉兰与山峤轻云洁净雅静，适合春晨、书香、晴好题材。", "2026-07-05"],
+      ["jade-ford", "玉渡晴沙", "浅滩古桥与沙洲山影清亮通透，适合轻游、晴溪、春水题材。", "2026-07-05"],
+      ["sunrise-court", "朝庭岚光", "庭院借景与晨光薄雾明朗吉雅，适合新晴、书院、雅居题材。", "2026-07-05"],
+      ["moon-terrace", "月台清辉", "澄明月色与山台远岭清华安宁，适合夜游、清辉、静美题材。", "2026-07-05"],
+      ["blossom-creek", "花溪晴午", "山溪花树与暖光细石轻快明媚，适合春夏、闲游、花事题材。", "2026-07-05"],
+      ["jade-lake", "玉湖清晖", "山湖浅桥与清润天色温柔澄澈，适合湖景、轻游、雅意题材。", "2026-07-05"],
+      ["river-lantern", "晴江灯汀", "浅江暖灯与山影夜色温柔欢喜，适合节序、夜游、团圆题材。", "2026-07-05"],
+      ["aurora-islet", "晴洲晓彩", "小洲浅水与朝霞远山轻盈开阔，适合朝霞、希望、晴景题材。", "2026-07-05"],
+      ["jade-steps", "玉阶山影", "石阶花木与远山轻云雅静通透，适合书香、庭园、清晨题材。", "2026-07-05"],
+      ["emerald-marsh", "碧汀春水", "芦汀清波与远峰晴光丰润明净，适合春水、清远、轻游题材。", "2026-07-05"],
+      ["silk-mountain", "绢岭流霞", "山岭云海与淡霞绢质感华美克制，适合晴霞、春晚、华章题材。", "2026-07-05"],
+      ["cypress-spring", "柏泉新晴", "古柏泉石与新晴光色端庄清朗，适合山居、清修、晴晨题材。", "2026-07-05"],
+      ["quartz-cliff", "晴崖凝玉", "明净山崖与清亮石色高洁晶润，适合清远、山景、灵秀题材。", "2026-07-05"],
+      ["misty-arcade", "云廊晓翠", "山廊松石与淡天光薄雾雅意十足，适合雅集、山居、朝翠题材。", "2026-07-05"],
+      ["plum-terrace", "梅台清晓", "山台疏梅与早春晨光清雅柔和，适合早春、幽香、清晓题材。", "2026-07-05"],
+      ["gold-ferry", "金渡晨航", "浅渡小舟与朝辉山水寓意顺遂，适合启程、远行、希望题材。", "2026-07-05"],
+      ["spring-well", "春井山居", "古井山墙与花木远山清新亲切，适合宅院、春日、山居题材。", "2026-07-05"],
+      ["clear-bridge", "晴桥烟水", "石桥浅水与白雾山影清远明净，适合烟景、桥影、短诗题材。", "2026-07-05"],
+      ["jade-window", "山窗清影", "山间窗景与远岭花木静美书卷，适合书房、闲居、清景题材。", "2026-07-05"],
+      ["lavender-ridge", "紫岫晴和", "淡紫晚霞与层岭云气温柔华净，适合晴晚、春山、静美题材。", "2026-07-05"],
+      ["blooming-canal", "花港春澜", "水道花树与远山小舟江南柔美，适合春游、花事、水景题材。", "2026-07-05"],
+      ["bronze-rill", "铜溪晴照", "山涧暖光与清水石面带古雅器韵，适合书斋、清游、古意题材。", "2026-07-05"],
+      ["petal-peak", "花岫晴岚", "花树点岭与轻云春光清甜雅净，适合春山、柔婉、花事题材。", "2026-07-05"],
+      ["dew-pavilion", "露亭晨碧", "小亭晨露与草木远山清新怡人，适合晨景、庭园、清夏题材。", "2026-07-05"],
+      ["silver-inlet", "银湾月霁", "月后初晴的水湾山影清美温柔，适合月夜、静美、澄辉题材。", "2026-07-05"],
+      ["jade-promenade", "玉堤晴步", "长堤柳影与浅湖远山温柔开阔，适合春湖、轻游、晴景题材。", "2026-07-05"],
+      ["clear-pagoda", "晴塔远岚", "远山古塔与云气晴光庄雅高远，适合登临、远望、山色题材。", "2026-07-05"]
+    ];
+
+    const gallery = document.getElementById("gallery");
+    templates.forEach(([slug, name, caption, date]) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="thumb"><img src="${base}bg-${slug}.png" alt="${name}"></div>
+        <div class="name">${name}</div>
+        <div class="slug">${slug}</div>
+        <div class="date">生成日期：${date}</div>
+        <div class="caption">${caption}</div>
+      `;
+      gallery.appendChild(card);
+    });
+  </script>
+</body>
+</html>

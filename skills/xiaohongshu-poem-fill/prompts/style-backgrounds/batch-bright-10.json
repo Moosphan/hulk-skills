@@ -1,0 +1,115 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "begonia-screen",
+      "promptFiles": [
+        "begonia-screen.md"
+      ],
+      "image": "../../assets/generated/styles/bg-begonia-screen.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "citrus-court",
+      "promptFiles": [
+        "citrus-court.md"
+      ],
+      "image": "../../assets/generated/styles/bg-citrus-court.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "golden-koi",
+      "promptFiles": [
+        "golden-koi.md"
+      ],
+      "image": "../../assets/generated/styles/bg-golden-koi.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "lantern-street",
+      "promptFiles": [
+        "lantern-street.md"
+      ],
+      "image": "../../assets/generated/styles/bg-lantern-street.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "magnolia-lane",
+      "promptFiles": [
+        "magnolia-lane.md"
+      ],
+      "image": "../../assets/generated/styles/bg-magnolia-lane.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "osmanthus-court",
+      "promptFiles": [
+        "osmanthus-court.md"
+      ],
+      "image": "../../assets/generated/styles/bg-osmanthus-court.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "peony-terrace",
+      "promptFiles": [
+        "peony-terrace.md"
+      ],
+      "image": "../../assets/generated/styles/bg-peony-terrace.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "pomegranate-window",
+      "promptFiles": [
+        "pomegranate-window.md"
+      ],
+      "image": "../../assets/generated/styles/bg-pomegranate-window.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "spring-fair",
+      "promptFiles": [
+        "spring-fair.md"
+      ],
+      "image": "../../assets/generated/styles/bg-spring-fair.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "swallow-eaves",
+      "promptFiles": [
+        "swallow-eaves.md"
+      ],
+      "image": "../../assets/generated/styles/bg-swallow-eaves.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}

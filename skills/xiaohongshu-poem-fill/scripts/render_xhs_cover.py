@@ -8,11 +8,13 @@ ROOT = Path(__file__).resolve().parents[1]
 W, H = 1080, 1440
 FONT_SONG = "/System/Library/Fonts/Supplemental/Songti.ttc"
 FONT_HEI = "/System/Library/Fonts/PingFang.ttc"
-FONT_SHANGWEI = "/Library/Fonts/HYShangWeiShouShuW.ttf"
 FONT_ASSET_ROOT = "/System/Library/AssetsV2/com_apple_MobileAsset_Font7"
+FONT_DIR = ROOT / "assets/fonts"
 
 FONT_PRESETS = {
-    "shangwei": {"path": FONT_SHANGWEI, "index": 0},
+    "lxgw-wenkai": {"path": str(FONT_DIR / "LXGWWenKai-Regular.ttf"), "index": 0},
+    "mashanzheng": {"path": str(FONT_DIR / "MaShanZheng-Regular.ttf"), "index": 0},
+    "zcool-xiaowei": {"path": str(FONT_DIR / "ZCOOLXiaoWei-Regular.ttf"), "index": 0},
     "xingkai": {
         "path": f"{FONT_ASSET_ROOT}/aa99d0b2bad7f797f38b49d46cde28fd4b58876e.asset/AssetData/Xingkai.ttc",
         "index": 0,
@@ -146,10 +148,14 @@ def main():
     parser.add_argument("--line1", default="半卷云{blank}暮雨，")
     parser.add_argument("--line2", default="一灯月{blank}归舟。")
     parser.add_argument("--line-spacing", type=int, default=72)
+    parser.add_argument("--poem-font-size", type=int, default=None)
+    parser.add_argument("--title-y", type=int, default=210)
+    parser.add_argument("--rule-y", type=int, default=270)
+    parser.add_argument("--poem-center-y", type=int, default=640)
     parser.add_argument("--heading", default="诗词填空")
     parser.add_argument("--label", default="画龙点睛挑战")
     available_fonts = sorted(k for k, v in FONT_PRESETS.items() if Path(v["path"]).exists())
-    default_font = "shangwei" if "shangwei" in available_fonts else available_fonts[0]
+    default_font = "zcool-xiaowei" if "zcool-xiaowei" in available_fonts else available_fonts[0]
     parser.add_argument("--font", choices=available_fonts, default=default_font)
     parser.add_argument("--font-path", default=None)
     parser.add_argument("--font-index", type=int, default=0)
@@ -168,12 +174,10 @@ def main():
     draw.rectangle((0, 0, W, H), fill=(250, 248, 242, 34))
 
     title_font = load_font("pingfang", 34)
-    poem_font = load_font(
-        args.font,
-        92 if args.blank_chars <= 1 else 84 if args.blank_chars == 2 else 76,
-        args.font_path,
-        args.font_index,
+    poem_size = args.poem_font_size or (
+        92 if args.blank_chars <= 1 else 84 if args.blank_chars == 2 else 76
     )
+    poem_font = load_font(args.font, poem_size, args.font_path, args.font_index)
     foot_font = load_font("pingfang", 24)
 
     title = f"{args.heading} · {args.label}"
@@ -182,10 +186,17 @@ def main():
     accent = style["accent"]
 
     tw = draw.textbbox((0, 0), title, font=title_font)[2]
-    draw.text(((W - tw) / 2, 210), title, font=title_font, fill=(*accent, 172))
-    draw.line((382, 270, 698, 270), fill=(*accent, 58), width=1)
+    draw.text(((W - tw) / 2, args.title_y), title, font=title_font, fill=(*accent, 172))
+    draw.line((382, args.rule_y, 698, args.rule_y), fill=(*accent, 58), width=1)
 
-    centered_text(draw, 640, poem, poem_font, fill=(22, 22, 20, 238), spacing=args.line_spacing)
+    centered_text(
+        draw,
+        args.poem_center_y,
+        poem,
+        poem_font,
+        fill=(22, 22, 20, 238),
+        spacing=args.line_spacing,
+    )
 
     if args.show_footer:
         footer = args.footer or "SHI CI     TIAN KONG     TIAO ZHAN"

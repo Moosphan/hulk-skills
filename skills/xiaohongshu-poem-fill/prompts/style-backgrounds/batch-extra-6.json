@@ -1,0 +1,71 @@
+{
+  "jobs": 4,
+  "tasks": [
+    {
+      "id": "cedar-court",
+      "promptFiles": [
+        "cedar-court.md"
+      ],
+      "image": "../../assets/generated/styles/bg-cedar-court.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "crane-marsh",
+      "promptFiles": [
+        "crane-marsh.md"
+      ],
+      "image": "../../assets/generated/styles/bg-crane-marsh.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "grotto-lamp",
+      "promptFiles": [
+        "grotto-lamp.md"
+      ],
+      "image": "../../assets/generated/styles/bg-grotto-lamp.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "reed-frost",
+      "promptFiles": [
+        "reed-frost.md"
+      ],
+      "image": "../../assets/generated/styles/bg-reed-frost.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "tidal-pavilion",
+      "promptFiles": [
+        "tidal-pavilion.md"
+      ],
+      "image": "../../assets/generated/styles/bg-tidal-pavilion.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    },
+    {
+      "id": "wisteria-wall",
+      "promptFiles": [
+        "wisteria-wall.md"
+      ],
+      "image": "../../assets/generated/styles/bg-wisteria-wall.png",
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "ar": "3:4",
+      "quality": "normal"
+    }
+  ]
+}
