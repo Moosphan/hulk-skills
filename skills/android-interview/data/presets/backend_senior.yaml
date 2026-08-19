@@ -1,0 +1,139 @@
+template_id: backend_senior
+display_name: Backend Senior Interview
+template_type: preset
+version: 1
+enabled: true
+aliases:
+  - backend
+  - backend senior
+  - senior backend
+  - java backend
+  - go backend
+  - 后端
+  - 高级后端
+target_role: Backend Engineer
+role_family: backend
+candidate_level: senior
+supported_levels:
+  - mid
+  - senior
+  - tl
+default_language: zh
+default_speech_language: auto
+persona_defaults:
+  default_persona: 引导教练型
+  round_overrides:
+    intro: 引导教练型
+    screening: 引导教练型
+    round1: 技术深挖型
+    round2: 连环拷问型
+    round3: 业务结果型
+    hr: 领导力评估型
+question_bank_rules:
+  allowed_rounds:
+    - intro
+    - screening
+    - round1
+    - round2
+    - round3
+    - hr
+  allowed_levels:
+    - mid
+    - senior
+    - tl
+  allowed_languages:
+    - zh
+    - en
+    - bilingual
+  allowed_difficulties:
+    - L1
+    - L2
+    - L3
+    - L4
+    - L5
+  blocked_tags:
+    - android
+  blocked_keywords:
+    - android
+    - lifecycle
+    - viewmodel
+rounds:
+  - round_id: intro
+    label:
+      en: Self Introduction
+      zh: 自我介绍
+    enabled: true
+    order: 10
+    goal: Build role fit and strongest backend project anchor.
+    default_language: auto
+    target_question_count: 1
+    focuses:
+      - communication
+      - project_authenticity
+      - ownership
+  - round_id: screening
+    label:
+      en: Screening
+      zh: 初筛
+    enabled: true
+    order: 20
+    goal: Validate ownership, scope, and project authenticity.
+    default_language: auto
+    target_question_count: 1
+    focuses:
+      - ownership
+      - delivery_scope
+      - resume_authenticity
+  - round_id: round1
+    label:
+      en: Round 1
+      zh: 第一轮
+    enabled: true
+    order: 30
+    goal: Probe implementation detail and problem solving.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - implementation_detail
+      - problem_solving
+      - ownership
+  - round_id: round2
+    label:
+      en: Round 2
+      zh: 第二轮
+    enabled: true
+    order: 40
+    goal: Probe architecture, performance, and tradeoffs.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - architecture
+      - performance
+      - tradeoff_reasoning
+  - round_id: round3
+    label:
+      en: Round 3
+      zh: 第三轮
+    enabled: true
+    order: 50
+    goal: Probe business understanding and technical influence.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - business_understanding
+      - technical_influence
+      - cross_team_execution
+  - round_id: hr
+    label:
+      en: HR Interview
+      zh: HR 面
+    enabled: true
+    order: 60
+    goal: Probe motivation, communication, and leadership maturity.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - motivation
+      - communication
+      - leadership
+      - stability

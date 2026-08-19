@@ -7,6 +7,10 @@ from typing import Any
 
 import yaml
 
+from profile_schema import InterviewTemplate
+from profile_schema import DEFAULT_ALLOWED_DIFFICULTIES, DEFAULT_ALLOWED_LANGUAGES, DEFAULT_ALLOWED_LEVELS
+from template_resolver import default_runtime_template
+
 
 @dataclass
 class Question:
@@ -36,10 +40,39 @@ class Question:
     source_path: str = ""
 
 
-ALLOWED_ROUNDS = {"intro", "screening", "round1", "round2", "round3", "hr"}
-ALLOWED_LEVELS = {"mid", "senior", "tl"}
-ALLOWED_LANGUAGES = {"zh", "en", "bilingual"}
-ALLOWED_DIFFICULTIES = {"L1", "L2", "L3", "L4", "L5"}
+LEGACY_ALLOWED_ROUNDS = {"intro", "screening", "round1", "round2", "round3", "hr"}
+LEGACY_ALLOWED_LEVELS = set(DEFAULT_ALLOWED_LEVELS)
+LEGACY_ALLOWED_LANGUAGES = set(DEFAULT_ALLOWED_LANGUAGES)
+LEGACY_ALLOWED_DIFFICULTIES = set(DEFAULT_ALLOWED_DIFFICULTIES)
+ACTIVE_VALIDATION_TEMPLATE: InterviewTemplate | None = None
+
+
+def configure_question_bank_template(template: InterviewTemplate | None = None) -> None:
+    global ACTIVE_VALIDATION_TEMPLATE
+    ACTIVE_VALIDATION_TEMPLATE = template
+
+
+def build_question_bank_validation_rules(template: InterviewTemplate | None = None) -> dict[str, set[str]]:
+    resolved_template = template or ACTIVE_VALIDATION_TEMPLATE
+    if resolved_template is None:
+        try:
+            resolved_template = default_runtime_template()
+        except Exception:
+            resolved_template = None
+    if resolved_template is None:
+        return {
+            "allowed_rounds": set(LEGACY_ALLOWED_ROUNDS),
+            "allowed_levels": set(LEGACY_ALLOWED_LEVELS),
+            "allowed_languages": set(LEGACY_ALLOWED_LANGUAGES),
+            "allowed_difficulties": set(LEGACY_ALLOWED_DIFFICULTIES),
+        }
+    rules = resolved_template.question_bank_rules
+    return {
+        "allowed_rounds": set(rules.allowed_rounds or resolved_template.round_ids or LEGACY_ALLOWED_ROUNDS),
+        "allowed_levels": set(rules.allowed_levels or LEGACY_ALLOWED_LEVELS),
+        "allowed_languages": set(rules.allowed_languages or LEGACY_ALLOWED_LANGUAGES),
+        "allowed_difficulties": {str(item).upper() for item in (rules.allowed_difficulties or LEGACY_ALLOWED_DIFFICULTIES)},
+    }
 
 
 def _read_frontmatter_markdown(path: Path) -> tuple[dict[str, Any], str]:
@@ -141,6 +174,35 @@ def load_question_bank(path: str | Path) -> list[Question]:
     return questions
 
 
+def question_matches_template(question: Question, template: InterviewTemplate | None) -> bool:
+    if template is None:
+        return True
+    rules = template.question_bank_rules
+    blocked_tags = {str(item).strip().lower() for item in rules.blocked_tags if str(item).strip()}
+    blocked_keywords = [str(item).strip().lower() for item in rules.blocked_keywords if str(item).strip()]
+    if blocked_tags:
+        question_tags = {str(item).strip().lower() for item in question.tags if str(item).strip()}
+        if question_tags & blocked_tags:
+            return False
+    if blocked_keywords:
+        haystacks = [
+            str(question.title or "").lower(),
+            str(question.question or "").lower(),
+            str(question.intent or "").lower(),
+            " ".join(str(item).lower() for item in question.tags if str(item).strip()),
+            " ".join(str(item).lower() for item in question.competencies if str(item).strip()),
+        ]
+        for keyword in blocked_keywords:
+            if any(keyword in text for text in haystacks):
+                return False
+    return True
+
+
+def filter_questions_for_template(questions: list[Question], template: InterviewTemplate | None) -> list[Question]:
+    filtered = [question for question in questions if question_matches_template(question, template)]
+    return filtered
+
+
 def load_speech_overrides(path: str | Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -192,9 +254,14 @@ def validate_question_bank(path: str | Path, questions: list[Question] | None = 
     loaded_questions = list(questions or load_question_bank(root))
     issues: list[dict[str, Any]] = []
     file_paths = sorted({_normalized_question_path(question, root) for question in loaded_questions})
-    round_coverage: dict[str, int] = {name: 0 for name in sorted(ALLOWED_ROUNDS)}
-    level_coverage: dict[str, int] = {name: 0 for name in sorted(ALLOWED_LEVELS)}
-    language_coverage: dict[str, int] = {name: 0 for name in sorted(ALLOWED_LANGUAGES)}
+    validation_rules = build_question_bank_validation_rules()
+    allowed_rounds = validation_rules["allowed_rounds"]
+    allowed_levels = validation_rules["allowed_levels"]
+    allowed_languages = validation_rules["allowed_languages"]
+    allowed_difficulties = validation_rules["allowed_difficulties"]
+    round_coverage: dict[str, int] = {name: 0 for name in sorted(allowed_rounds)}
+    level_coverage: dict[str, int] = {name: 0 for name in sorted(allowed_levels)}
+    language_coverage: dict[str, int] = {name: 0 for name in sorted(allowed_languages)}
     id_to_paths: dict[str, list[str]] = {}
     title_round_to_paths: dict[tuple[str, str], list[str]] = {}
 
@@ -250,42 +317,42 @@ def validate_question_bank(path: str | Path, questions: list[Question] | None = 
                     )
                 )
 
-        if round_name and round_name not in ALLOWED_ROUNDS:
+        if round_name and round_name not in allowed_rounds:
             issues.append(
                 _validation_issue(
                     "error",
                     "invalid_round",
-                    f"Unknown round '{round_name}'. Allowed values: {', '.join(sorted(ALLOWED_ROUNDS))}.",
+                    f"Unknown round '{round_name}'. Allowed values: {', '.join(sorted(allowed_rounds))}.",
                     path=rel_path,
                     question_id=question_id,
                 )
             )
-        if level_name and level_name not in ALLOWED_LEVELS:
+        if level_name and level_name not in allowed_levels:
             issues.append(
                 _validation_issue(
                     "error",
                     "invalid_level",
-                    f"Unknown level '{level_name}'. Allowed values: {', '.join(sorted(ALLOWED_LEVELS))}.",
+                    f"Unknown level '{level_name}'. Allowed values: {', '.join(sorted(allowed_levels))}.",
                     path=rel_path,
                     question_id=question_id,
                 )
             )
-        if language and language not in ALLOWED_LANGUAGES:
+        if language and language not in allowed_languages:
             issues.append(
                 _validation_issue(
                     "error",
                     "invalid_language",
-                    f"Unknown language '{language}'. Allowed values: {', '.join(sorted(ALLOWED_LANGUAGES))}.",
+                    f"Unknown language '{language}'. Allowed values: {', '.join(sorted(allowed_languages))}.",
                     path=rel_path,
                     question_id=question_id,
                 )
             )
-        if difficulty and difficulty not in ALLOWED_DIFFICULTIES:
+        if difficulty and difficulty not in allowed_difficulties:
             issues.append(
                 _validation_issue(
                     "error",
                     "invalid_difficulty",
-                    f"Unknown difficulty '{difficulty}'. Allowed values: {', '.join(sorted(ALLOWED_DIFFICULTIES))}.",
+                    f"Unknown difficulty '{difficulty}'. Allowed values: {', '.join(sorted(allowed_difficulties))}.",
                     path=rel_path,
                     question_id=question_id,
                 )

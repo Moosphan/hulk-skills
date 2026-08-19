@@ -5,6 +5,9 @@
 Use this sequence:
 
 - `intake`
+- `template_resolution`
+- `template_creation` (optional)
+- `material_collection`
 - `screening`
 - `planning`
 - `round_active`
@@ -19,13 +22,19 @@ Use this sequence:
 - `screening`
   - resume authenticity, ownership, baseline fit
 - `round1`
-  - Android core, implementation detail, problem solving
+  - role-specific implementation depth, problem solving
 - `round2`
   - architecture, performance, tradeoffs, diagnosis depth
 - `round3`
   - technical influence, business judgment, cross-team execution
 - `hr`
   - motivation, stability, conflict handling, maturity
+
+Template-aware routing:
+
+- rounds are determined by the active template, not by Android-only defaults
+- if a template disables a round such as `round3`, the runtime must not force-generate that round
+- question selection should prefer template-compatible question-bank items and only use generated fallback prompts when the active round still lacks enough coverage
 
 ## Question Loop
 

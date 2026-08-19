@@ -10,11 +10,14 @@ from typing import Any, Iterable
 
 from jinja2 import Template
 
+from material_collector import resolve_material_text
 from question_bank import Question
+from profile_schema import InterviewTemplate
+from template_resolver import default_runtime_template
 from tts_support import synthesize_text
 
 
-ROUND_LABELS = {
+LEGACY_ROUND_LABELS = {
     "intro": "Self Introduction",
     "screening": "Screening",
     "round1": "Round 1",
@@ -23,7 +26,7 @@ ROUND_LABELS = {
     "hr": "HR Interview",
 }
 
-ROUND_FOCUS = {
+LEGACY_ROUND_FOCUS = {
     "intro": ["communication", "project_authenticity", "english_interview"],
     "screening": ["ownership", "resume_authenticity", "delivery_scope"],
     "round1": ["android_core", "problem_solving", "implementation_detail"],
@@ -32,7 +35,7 @@ ROUND_FOCUS = {
     "hr": ["motivation", "conflict_handling", "leadership", "stability"],
 }
 
-ROUND_SEQUENCE = ["intro", "screening", "round1", "round2", "round3", "hr"]
+LEGACY_ROUND_SEQUENCE = ["intro", "screening", "round1", "round2", "round3", "hr"]
 
 TURN_STAGE_LABELS = {
     "intro": "阶段介绍",
@@ -139,7 +142,7 @@ PERSONA_ALIASES = {
     "leadership-evaluator": "领导力评估型",
 }
 
-ROUND_PERSONA_DEFAULTS = {
+LEGACY_ROUND_PERSONA_DEFAULTS = {
     "intro": "引导教练型",
     "screening": "引导教练型",
     "round1": "技术深挖型",
@@ -148,21 +151,268 @@ ROUND_PERSONA_DEFAULTS = {
     "hr": "领导力评估型",
 }
 
-MODE_ROUNDS = {
-    "simulate": ["intro", "screening", "round1", "round2", "round3", "hr"],
-    "screening": ["intro", "screening"],
-    "round1": ["intro", "screening", "round1"],
-    "round2": ["intro", "round2"],
-    "round3": ["intro", "round3"],
-    "hr": ["intro", "hr"],
-}
-
-ROUND_QUESTION_TARGETS = {
+LEGACY_ROUND_QUESTION_TARGETS = {
     "screening": 1,
     "round1": 2,
     "round2": 2,
     "round3": 2,
     "hr": 2,
+}
+
+
+def _runtime_template_defaults_for(template: InterviewTemplate | None) -> tuple[dict[str, str], dict[str, list[str]], list[str], dict[str, str], dict[str, int], str, str, str, str, list[str]]:
+    if template is None:
+        return (
+            dict(LEGACY_ROUND_LABELS),
+            {key: list(value) for key, value in LEGACY_ROUND_FOCUS.items()},
+            list(LEGACY_ROUND_SEQUENCE),
+            dict(LEGACY_ROUND_PERSONA_DEFAULTS),
+            dict(LEGACY_ROUND_QUESTION_TARGETS),
+            "",
+            "Interview",
+            "target role",
+            "general",
+            [],
+        )
+    round_labels = template.round_labels("en") or dict(LEGACY_ROUND_LABELS)
+    round_focus = template.round_focus_map() or {key: list(value) for key, value in LEGACY_ROUND_FOCUS.items()}
+    round_sequence = template.round_ids or list(LEGACY_ROUND_SEQUENCE)
+    round_personas = template.round_persona_map() or dict(LEGACY_ROUND_PERSONA_DEFAULTS)
+    round_targets = template.round_question_targets() or dict(LEGACY_ROUND_QUESTION_TARGETS)
+    return (
+        round_labels,
+        round_focus,
+        round_sequence,
+        round_personas,
+        round_targets,
+        template.template_id,
+        template.display_name or "Interview",
+        template.target_role or template.display_name or "target role",
+        template.role_family or "general",
+        list(template.question_bank_rules.blocked_keywords),
+    )
+
+
+def _load_runtime_template_defaults() -> tuple[dict[str, str], dict[str, list[str]], list[str], dict[str, str], dict[str, int], str, str, str, str, list[str]]:
+    try:
+        template = default_runtime_template()
+    except Exception:
+        template = None
+    return _runtime_template_defaults_for(template)
+
+
+(
+    ROUND_LABELS,
+    ROUND_FOCUS,
+    ROUND_SEQUENCE,
+    ROUND_PERSONA_DEFAULTS,
+    ROUND_QUESTION_TARGETS,
+    ACTIVE_TEMPLATE_ID,
+    ACTIVE_TEMPLATE_DISPLAY_NAME,
+    ACTIVE_TEMPLATE_TARGET_ROLE,
+    ACTIVE_TEMPLATE_ROLE_FAMILY,
+    ACTIVE_TEMPLATE_BLOCKED_KEYWORDS,
+) = _load_runtime_template_defaults()
+
+
+def configure_runtime_template(template: InterviewTemplate | None = None) -> str:
+    global ROUND_LABELS, ROUND_FOCUS, ROUND_SEQUENCE, ROUND_PERSONA_DEFAULTS, ROUND_QUESTION_TARGETS, ACTIVE_TEMPLATE_ID, ACTIVE_TEMPLATE_DISPLAY_NAME, ACTIVE_TEMPLATE_TARGET_ROLE, ACTIVE_TEMPLATE_ROLE_FAMILY, ACTIVE_TEMPLATE_BLOCKED_KEYWORDS, MODE_ROUNDS
+    (
+        ROUND_LABELS,
+        ROUND_FOCUS,
+        ROUND_SEQUENCE,
+        ROUND_PERSONA_DEFAULTS,
+        ROUND_QUESTION_TARGETS,
+        ACTIVE_TEMPLATE_ID,
+        ACTIVE_TEMPLATE_DISPLAY_NAME,
+        ACTIVE_TEMPLATE_TARGET_ROLE,
+        ACTIVE_TEMPLATE_ROLE_FAMILY,
+        ACTIVE_TEMPLATE_BLOCKED_KEYWORDS,
+    ) = _runtime_template_defaults_for(template)
+    MODE_ROUNDS = {
+        "simulate": list(ROUND_SEQUENCE),
+        "screening": [round_name for round_name in ["intro", "screening"] if round_name in ROUND_SEQUENCE],
+        "round1": [round_name for round_name in ["intro", "screening", "round1"] if round_name in ROUND_SEQUENCE],
+        "round2": [round_name for round_name in ["intro", "round2"] if round_name in ROUND_SEQUENCE],
+        "round3": [round_name for round_name in ["intro", "round3"] if round_name in ROUND_SEQUENCE],
+        "hr": [round_name for round_name in ["intro", "hr"] if round_name in ROUND_SEQUENCE],
+    }
+    return ACTIVE_TEMPLATE_ID
+
+
+def runtime_target_role_label() -> str:
+    return ACTIVE_TEMPLATE_TARGET_ROLE or "target role"
+
+
+def runtime_display_name() -> str:
+    return ACTIVE_TEMPLATE_DISPLAY_NAME or "Interview"
+
+
+def runtime_role_family() -> str:
+    return ACTIVE_TEMPLATE_ROLE_FAMILY or "general"
+
+
+def runtime_blocked_keywords() -> set[str]:
+    return {str(item).strip().lower() for item in (ACTIVE_TEMPLATE_BLOCKED_KEYWORDS or []) if str(item).strip()}
+
+
+ROLE_FAMILY_FOCUS_DEFAULTS = {
+    "android": ["android-core", "architecture", "performance", "leadership"],
+    "backend": ["implementation", "architecture", "performance", "business"],
+    "frontend": ["implementation", "architecture", "performance", "communication"],
+    "product": ["business", "strategy", "communication", "leadership"],
+    "design": ["user-experience", "business", "collaboration", "leadership"],
+    "general": ["implementation", "ownership", "business", "leadership"],
+}
+
+ROLE_FAMILY_KEYWORDS = {
+    "android": ["android", "app", "lifecycle", "anr", "oom", "render", "viewmodel", "jetpack", "compose"],
+    "backend": ["backend", "api", "service", "rpc", "database", "cache", "mq", "queue", "redis", "mysql", "kafka", "storage"],
+    "frontend": ["frontend", "web", "browser", "react", "vue", "javascript", "typescript", "css"],
+    "product": ["product", "growth", "funnel", "retention", "experiment", "roadmap", "go-to-market"],
+    "design": ["design", "ux", "ui", "prototype", "research", "visual", "interaction"],
+}
+
+GENERIC_ARCHITECTURE_TERMS = [
+    "architecture",
+    "architect",
+    "modular",
+    "module",
+    "system",
+    "design",
+    "scalability",
+    "distributed",
+    "service",
+    "microservice",
+    "api",
+    "platform",
+]
+GENERIC_PERFORMANCE_TERMS = [
+    "performance",
+    "latency",
+    "throughput",
+    "capacity",
+    "availability",
+    "reliability",
+    "startup",
+    "anr",
+    "oom",
+    "render",
+    "cpu",
+    "memory",
+    "p99",
+    "qps",
+]
+GENERIC_LEADERSHIP_TERMS = [
+    "lead",
+    "mentoring",
+    "mentor",
+    "manager",
+    "stakeholder",
+    "cross-team",
+    "cross functional",
+    "ownership",
+    "influence",
+]
+GENERIC_BUSINESS_TERMS = [
+    "business",
+    "growth",
+    "consumer",
+    "metric",
+    "impact",
+    "product",
+    "revenue",
+    "conversion",
+    "retention",
+    "efficiency",
+]
+GENERIC_ENGLISH_TERMS = ["english", "global", "international"]
+GENERIC_OWNERSHIP_TERMS = ["i led", "i owned", "responsible", "ownership", "drove", "owned"]
+GENERIC_RESUME_LEADERSHIP_TERMS = ["lead", "mentor", "stakeholder", "align", "priority", "conflict", "influence"]
+GENERIC_RESUME_ARCHITECTURE_TERMS = [
+    "architecture",
+    "modular",
+    "module",
+    "system",
+    "design",
+    "trace",
+    "baseline",
+    "performance",
+    "service",
+    "api",
+    "database",
+]
+GENERIC_TRADEOFF_TERMS = ["tradeoff", "rollback", "regression", "baseline", "trace", "monitor", "fallback", "incident"]
+GENERIC_SENIORITY_TERMS = ["architecture", "ownership", "lead", "mentor", "tradeoff", "rollback", "performance", "module", "scope", "strategy"]
+ROLE_FAMILY_CAPABILITY_LABELS = {
+    "android": "Android 核心能力",
+    "backend": "后端系统设计与工程实践",
+    "frontend": "前端工程能力",
+    "product": "岗位核心判断与产品推进能力",
+    "design": "设计判断与体验推进能力",
+    "general": "岗位核心能力",
+}
+KEYWORD_STOPWORDS = {
+    "and",
+    "the",
+    "with",
+    "for",
+    "from",
+    "into",
+    "your",
+    "this",
+    "that",
+    "app",
+    "engineer",
+    "senior",
+    "candidate",
+    "project",
+    "projects",
+    "experience",
+    "years",
+    "must",
+    "able",
+    "include",
+    "includes",
+    "using",
+    "used",
+    "worked",
+    "closely",
+    "strong",
+    "large",
+    "platform",
+    "role",
+    "team",
+}
+
+
+def role_family_keywords(role_family: str | None = None) -> list[str]:
+    family = str(role_family or runtime_role_family()).strip().lower() or "general"
+    return list(ROLE_FAMILY_KEYWORDS.get(family, []))
+
+
+def default_focus_areas_for_role(role_family: str | None = None) -> list[str]:
+    family = str(role_family or runtime_role_family()).strip().lower() or "general"
+    return list(ROLE_FAMILY_FOCUS_DEFAULTS.get(family, ROLE_FAMILY_FOCUS_DEFAULTS["general"]))
+
+
+def role_specific_capability_label(role_family: str | None = None) -> str:
+    family = str(role_family or runtime_role_family()).strip().lower() or "general"
+    return ROLE_FAMILY_CAPABILITY_LABELS.get(family, ROLE_FAMILY_CAPABILITY_LABELS["general"])
+
+
+def count_term_hits(text: str, terms: list[str]) -> int:
+    lowered = text.lower()
+    return sum(1 for token in terms if token in lowered)
+
+
+MODE_ROUNDS = {
+    "simulate": list(ROUND_SEQUENCE),
+    "screening": ["intro", "screening"],
+    "round1": ["intro", "screening", "round1"],
+    "round2": ["intro", "round2"],
+    "round3": ["intro", "round3"],
+    "hr": ["intro", "hr"],
 }
 
 ROUND_THRESHOLD_DEFAULTS = {
@@ -519,7 +769,7 @@ def build_timeline_records(
 
 
 def read_text(path: str | Path) -> str:
-    return Path(path).read_text(encoding="utf-8").strip()
+    return resolve_material_text(path).strip()
 
 
 def load_answers(path: str | Path) -> dict[str, Any]:
@@ -532,7 +782,13 @@ def slugify(text: str) -> str:
 
 
 def keywords(text: str) -> set[str]:
-    return {token.lower() for token in re.findall(r"[A-Za-z][A-Za-z0-9.+_-]{2,}", text)}
+    normalized: set[str] = set()
+    for raw in re.findall(r"[A-Za-z][A-Za-z0-9.+_-]{2,}", text):
+        token = raw.lower().strip("._+-")
+        if len(token) < 3 or token in KEYWORD_STOPWORDS:
+            continue
+        normalized.add(token)
+    return normalized
 
 
 def language_text(language: str, zh: str, en: str, bilingual: str | None = None) -> str:
@@ -688,7 +944,12 @@ def question_focuses(question: Any) -> list[str]:
 
 
 def top_keywords_for_prompt(jd_text: str, resume_text: str, limit: int = 4) -> list[str]:
-    merged = sorted(list(keywords(jd_text) | keywords(resume_text)))
+    blocked = runtime_blocked_keywords()
+    merged = sorted(
+        item
+        for item in (keywords(jd_text) | keywords(resume_text))
+        if item not in blocked and item not in KEYWORD_STOPWORDS and item not in set(role_family_keywords())
+    )
     return merged[:limit]
 
 
@@ -799,12 +1060,14 @@ def choose_adaptive_next_question(
 
 def detect_jd_priority_signals(jd_text: str) -> dict[str, bool]:
     lowered = jd_text.lower()
+    role_terms = role_family_keywords()
     return {
-        "performance_heavy": any(token in lowered for token in ["performance", "startup", "latency", "anr", "oom", "render"]),
-        "architecture_heavy": any(token in lowered for token in ["architecture", "modular", "module", "design", "scalability", "system"]),
-        "leadership_heavy": any(token in lowered for token in ["lead", "mentoring", "manager", "stakeholder", "cross-team", "ownership"]),
-        "business_heavy": any(token in lowered for token in ["business", "growth", "consumer", "metric", "impact", "product"]),
-        "english_required": "english" in lowered,
+        "performance_heavy": any(token in lowered for token in GENERIC_PERFORMANCE_TERMS),
+        "architecture_heavy": any(token in lowered for token in GENERIC_ARCHITECTURE_TERMS),
+        "leadership_heavy": any(token in lowered for token in GENERIC_LEADERSHIP_TERMS),
+        "business_heavy": any(token in lowered for token in GENERIC_BUSINESS_TERMS),
+        "english_required": any(token in lowered for token in GENERIC_ENGLISH_TERMS),
+        "role_specific_heavy": any(token in lowered for token in role_terms),
     }
 
 
@@ -816,11 +1079,11 @@ def detect_resume_gap_signals(resume_text: str, candidate_profile: dict[str, Any
         gaps.append("metrics_evidence")
     if not profile_signals.get("contains_ownership", False):
         gaps.append("ownership_evidence")
-    if not any(token in lowered for token in ["lead", "mentor", "stakeholder", "align", "priority", "conflict"]):
+    if not any(token in lowered for token in GENERIC_RESUME_LEADERSHIP_TERMS):
         gaps.append("leadership_signal")
-    if not any(token in lowered for token in ["tradeoff", "rollback", "regression", "baseline", "trace", "monitor"]):
+    if not any(token in lowered for token in GENERIC_TRADEOFF_TERMS):
         gaps.append("tradeoff_signal")
-    if language != "zh" and not any(token in lowered for token in ["english", "global", "international"]):
+    if language != "zh" and not any(token in lowered for token in GENERIC_ENGLISH_TERMS):
         gaps.append("english_signal")
     return gaps
 
@@ -1111,14 +1374,15 @@ def build_improvement_suggestions(results: list[QuestionResult]) -> list[str]:
 def generated_question_blueprint(round_name: str, focus: str, language: str, jd_text: str, resume_text: str) -> tuple[str, list[str], str, str]:
     keyword_text = ", ".join(top_keywords_for_prompt(jd_text, resume_text, limit=4))
     normalized_focus = normalize_dimension_name(focus)
+    role_label = runtime_target_role_label()
 
     prompt_map = {
         "implementation_detail": (
             language_text(
                 language,
-                f"请结合你做过的 Android 功能，讲一个你亲自落地的实现细节案例。重点说明关键实现、边界条件，以及它与 {keyword_text} 这类要求的关系。",
-                f"Take one Android feature you personally implemented and walk me through the concrete implementation detail. Focus on the key mechanism, edge cases, and how it connects to requirements like {keyword_text}.",
-                f"Take one Android feature you personally implemented and walk me through the concrete implementation detail. Focus on the key mechanism, edge cases, and how it connects to requirements like {keyword_text}. 如有必要可补充中文术语说明。",
+                f"请结合你做过的 {role_label} 相关功能或项目，讲一个你亲自落地的实现细节案例。重点说明关键实现、边界条件，以及它与 {keyword_text} 这类要求的关系。",
+                f"Take one {role_label} feature or project you personally implemented and walk me through the concrete implementation detail. Focus on the key mechanism, edge cases, and how it connects to requirements like {keyword_text}.",
+                f"Take one {role_label} feature or project you personally implemented and walk me through the concrete implementation detail. Focus on the key mechanism, edge cases, and how it connects to requirements like {keyword_text}. 如有必要可补充中文术语说明。",
             ),
             [
                 language_text(language, "这个实现里最容易出错的边界条件是什么？", "What was the easiest edge case to get wrong here?"),
@@ -1130,9 +1394,9 @@ def generated_question_blueprint(round_name: str, focus: str, language: str, jd_
         "tradeoff_reasoning": (
             language_text(
                 language,
-                "请讲一个你在 Android 项目里做过的重要技术权衡。重点说清楚候选方案、你最终的选择、被你放弃的方案，以及为什么。",
-                "Tell me about one meaningful Android tradeoff you had to make. Be explicit about the options you considered, the option you chose, the option you rejected, and why.",
-                "Tell me about one meaningful Android tradeoff you had to make. Be explicit about the options you considered, the option you chose, the option you rejected, and why. 需要时可补充中文术语说明。",
+                f"请讲一个你在 {role_label} 相关项目里做过的重要技术权衡。重点说清楚候选方案、你最终的选择、被你放弃的方案，以及为什么。",
+                f"Tell me about one meaningful tradeoff you had to make in a {role_label} related project. Be explicit about the options you considered, the option you chose, the option you rejected, and why.",
+                f"Tell me about one meaningful tradeoff you had to make in a {role_label} related project. Be explicit about the options you considered, the option you chose, the option you rejected, and why. 需要时可补充中文术语说明。",
             ),
             [
                 language_text(language, "如果现在重做，你还会做同样的选择吗？", "If you had to do it again today, would you make the same choice?"),
@@ -1172,9 +1436,9 @@ def generated_question_blueprint(round_name: str, focus: str, language: str, jd_
         "business_understanding": (
             language_text(
                 language,
-                f"选一个你参与过的 Android 项目，从业务结果视角复盘。重点说清楚这个项目服务了什么目标，以及它和 {keyword_text} 这类要求的关系。",
-                f"Pick one Android project you worked on and review it from a business outcome perspective. Explain the business goal it served and how it connected to expectations like {keyword_text}.",
-                f"Pick one Android project you worked on and review it from a business outcome perspective. Explain the business goal it served and how it connected to expectations like {keyword_text}. 如有必要可补充中文业务背景。",
+                f"选一个你参与过的 {role_label} 相关项目，从业务结果视角复盘。重点说清楚这个项目服务了什么目标，以及它和 {keyword_text} 这类要求的关系。",
+                f"Pick one {role_label} related project you worked on and review it from a business outcome perspective. Explain the business goal it served and how it connected to expectations like {keyword_text}.",
+                f"Pick one {role_label} related project you worked on and review it from a business outcome perspective. Explain the business goal it served and how it connected to expectations like {keyword_text}. 如有必要可补充中文业务背景。",
             ),
             [
                 language_text(language, "你最关注的业务指标是什么？", "Which business metric mattered the most to you?"),
@@ -1292,7 +1556,11 @@ def select_questions(
     language: str,
     interview_plan: dict[str, Any] | None = None,
 ) -> list[Question]:
-    desired_rounds = ["screening", "round1", "round2", "round3", "hr"]
+    desired_rounds = [
+        str(item.get("round", "")).strip()
+        for item in (interview_plan or {}).get("rounds", [])
+        if str(item.get("round", "")).strip() and str(item.get("round", "")).strip() != "intro"
+    ] or ["screening", "round1", "round2", "round3", "hr"]
     selected: list[Question] = []
     for target_round in desired_rounds:
         round_language = planned_language_for_round(interview_plan, target_round, language)
@@ -1312,6 +1580,7 @@ def select_questions(
 
 
 def build_intro_question(level: str, language: str) -> Question:
+    role_label = runtime_target_role_label()
     return Question(
         id="intro-self-001",
         title="Self Introduction and Career Narrative",
@@ -1330,9 +1599,9 @@ def build_intro_question(level: str, language: str) -> Question:
         expected_signal="Candidate can give a concise, role-relevant narrative with clear strongest project anchors.",
         question=language_text(
             language,
-            "请你先做一个 1 到 2 分钟的自我介绍，重点讲清楚你的 Android 核心经历、最有代表性的项目，以及为什么你适合这个岗位。",
-            "Please give me a one to two minute self-introduction. Focus on your Android experience, your strongest project, and why you fit this role.",
-            "Please give me a one to two minute self-introduction in English. You may add a short Chinese clarification only if necessary. Focus on your Android experience, strongest project, and fit for this role.\n\n请先用英文做 1 到 2 分钟自我介绍，必要时可补充简短中文说明。",
+            f"请你先做一个 1 到 2 分钟的自我介绍，重点讲清楚你与 {role_label} 相关的核心经历、最有代表性的项目，以及为什么你适合这个岗位。",
+            f"Please give me a one to two minute self-introduction. Focus on your {role_label} related experience, your strongest project, and why you fit this role.",
+            f"Please give me a one to two minute self-introduction in English. You may add a short Chinese clarification only if necessary. Focus on your {role_label} related experience, strongest project, and fit for this role.\n\n请先用英文做 1 到 2 分钟自我介绍，必要时可补充简短中文说明。",
         ),
         follow_ups=[
             language_text(
@@ -1452,46 +1721,70 @@ def compose_main_prompt(question: Question, persona: PersonaConfig, language: st
     return "\n".join(parts)
 
 
+def text_evidence_units(text: str) -> int:
+    cjk_chars = len(re.findall(r"[\u4e00-\u9fff]", text))
+    latin_tokens = len(re.findall(r"[A-Za-z0-9][A-Za-z0-9.+_%-]*", text))
+    return cjk_chars + latin_tokens * 2
+
+
+def has_any_phrase(text: str, phrases: list[str]) -> bool:
+    lowered = text.lower()
+    return any(phrase in lowered for phrase in phrases)
+
+
+def question_focus_set(question: Question | None) -> set[str]:
+    if question is None:
+        return set()
+    return set(question_focuses(question))
+
+
 def detect_strengths(text: str) -> list[str]:
     signals: list[str] = []
     lowered = text.lower()
     if re.search(r"\b\d+(\.\d+)?%|\b\d+ms\b|\b\d+x\b", lowered):
         signals.append("提供了量化指标或性能结果")
-    if any(token in lowered for token in ["i led", "i owned", "i designed", "i implemented", "i drove", "my role"]):
+    if has_any_phrase(lowered, ["i led", "i owned", "i designed", "i implemented", "i drove", "my role", "我负责", "我主导", "我设计", "我推进", "我拍板", "我亲自"]):
         signals.append("能够明确说明个人职责与 ownership")
-    if any(token in lowered for token in ["because", "trade", "instead of", "rollback", "regression", "tradeoff"]):
+    if has_any_phrase(lowered, ["because", "trade", "instead of", "rollback", "regression", "tradeoff", "取舍", "权衡", "回滚", "降级", "备选方案", "而不是"]):
         signals.append("体现出方案权衡与风险控制意识")
-    if any(token in lowered for token in ["trace", "profil", "metric", "monitor", "baseline", "macrobenchmark", "dashboard"]):
+    if has_any_phrase(lowered, ["trace", "profil", "metric", "monitor", "baseline", "macrobenchmark", "dashboard", "监控", "指标", "基线", "压测", "看板", "观测", "日志", "链路追踪"]):
         signals.append("体现出诊断、度量或可观测性意识")
-    if any(token in lowered for token in ["stakeholder", "align", "scope", "priority", "mentoring", "coach"]):
+    if has_any_phrase(lowered, ["stakeholder", "align", "scope", "priority", "mentoring", "coach", "跨团队", "对齐", "优先级", "影响力", "带节奏", "冲突"]):
         signals.append("体现出跨团队协作或领导力信号")
-    if any(token in lowered for token in ["customer", "revenue", "retention", "conversion", "adoption"]):
+    if has_any_phrase(lowered, ["customer", "revenue", "retention", "conversion", "adoption", "业务", "收入", "转化", "留存", "履约", "成功率", "用户价值"]):
         signals.append("体现出业务结果意识")
     return sorted(set(signals))
 
 
-def detect_risks(text: str) -> list[str]:
+def detect_risks(text: str, question: Question | None = None) -> list[str]:
     risks: list[str] = []
     lowered = text.lower()
-    if len(text.split()) < 18:
+    focus_set = question_focus_set(question)
+    evidence_units = text_evidence_units(text)
+    if evidence_units < 36:
         risks.append("回答过短，证据密度不足")
-    if "we" in lowered and not any(token in lowered for token in ["i owned", "my role", "i was responsible", "i led"]):
+    if ("we" in lowered or "我们" in text) and not has_any_phrase(lowered, ["i owned", "my role", "i was responsible", "i led", "我负责", "我主导", "我推进", "我设计"]):
         risks.append("团队表述较多，但个人职责边界不够清晰")
-    if not re.search(r"\b\d+(\.\d+)?%|\b\d+ms\b|\b\d+x\b", lowered):
+    metrics_required = not focus_set or bool(focus_set & {"ownership", "delivery_scope", "implementation_detail", "performance", "business_understanding", "cross_team_execution"})
+    if metrics_required and not re.search(r"\b\d+(\.\d+)?%|\b\d+ms\b|\b\d+x\b", lowered) and not has_any_phrase(lowered, ["指标", "成功率", "延迟", "时延", "命中率", "错误率", "qps", "p99", "吞吐"]):
         risks.append("缺少量化结果或关键指标")
-    if any(token in lowered for token in ["maybe", "probably", "i think"]):
+    if has_any_phrase(lowered, ["maybe", "probably", "i think", "大概", "可能", "我觉得", "应该是"]):
         risks.append("表述存在不确定语气，结论不够扎实")
     return sorted(set(risks))
 
 
-def detect_missing(text: str) -> list[str]:
+def detect_missing(text: str, question: Question | None = None) -> list[str]:
     missing: list[str] = []
     lowered = text.lower()
-    if not any(token in lowered for token in ["because", "trade", "instead of", "tradeoff"]):
+    focus_set = question_focus_set(question)
+    tradeoff_expected = not focus_set or bool(focus_set & {"implementation_detail", "architecture", "performance", "tradeoff_reasoning", "business_understanding"})
+    failure_expected = not focus_set or bool(focus_set & {"implementation_detail", "architecture", "performance", "problem_solving", "tradeoff_reasoning"})
+    observability_expected = not focus_set or bool(focus_set & {"implementation_detail", "architecture", "performance", "problem_solving", "ownership", "delivery_scope"})
+    if tradeoff_expected and not has_any_phrase(lowered, ["because", "trade", "instead of", "tradeoff", "取舍", "权衡", "为什么选", "为什么不是", "备选方案"]):
         missing.append("缺少明确的方案权衡说明")
-    if not any(token in lowered for token in ["failed", "issue", "problem", "regression", "rollback", "lesson"]):
+    if failure_expected and not has_any_phrase(lowered, ["failed", "issue", "problem", "regression", "rollback", "lesson", "故障", "问题", "失败", "回滚", "复盘", "踩坑"]):
         missing.append("缺少失败、问题或回滚相关说明")
-    if not any(token in lowered for token in ["metric", "monitor", "latency", "startup", "anr", "oom", "crash", "dashboard"]):
+    if observability_expected and not has_any_phrase(lowered, ["metric", "monitor", "latency", "startup", "anr", "oom", "crash", "dashboard", "指标", "监控", "延迟", "日志", "追踪", "慢查询", "错误率", "命中率"]):
         missing.append("缺少可观测指标或问题定位信息")
     return sorted(set(missing))
 
@@ -1500,15 +1793,15 @@ def signal_tags(text: str) -> set[str]:
     lowered = text.lower()
     tags: set[str] = set()
     mapping = {
-        "ownership": ["ownership", "owner", "owned", "responsible", "boundary", "contribution", "personally", "my role"],
-        "metrics": ["metric", "result", "latency", "startup", "anr", "oom", "dashboard", "baseline", "monitor", "ms", "%", "measur"],
-        "tradeoff": ["tradeoff", "trade", "rollback", "regression", "risk", "alternative", "option"],
-        "verification": ["verify", "validation", "reproduction", "recreate", "duplicate", "log", "trace", "stable", "testing"],
+        "ownership": ["ownership", "owner", "owned", "responsible", "boundary", "contribution", "personally", "my role", "我负责", "我主导", "我推进", "我拍板", "亲自"],
+        "metrics": ["metric", "result", "latency", "startup", "anr", "oom", "dashboard", "baseline", "monitor", "ms", "%", "measur", "指标", "时延", "成功率", "命中率", "错误率", "p99", "qps"],
+        "tradeoff": ["tradeoff", "trade", "rollback", "regression", "risk", "alternative", "option", "取舍", "权衡", "回滚", "降级", "备选方案"],
+        "verification": ["verify", "validation", "reproduction", "recreate", "duplicate", "log", "trace", "stable", "testing", "验证", "压测", "监控", "日志", "灰度", "观测"],
         "lifecycle": ["lifecycle", "viewmodel", "state", "effect", "recreation", "duplicate work"],
-        "leadership": ["stakeholder", "align", "mentor", "coach", "influence", "priority", "conflict", "team"],
-        "business": ["business", "product", "launch", "customer", "revenue", "retention", "conversion", "adoption", "outcome"],
-        "motivation": ["motivation", "fit", "career", "commitment", "long-term", "next step"],
-        "english": ["english", "global", "international", "bilingual"],
+        "leadership": ["stakeholder", "align", "mentor", "coach", "influence", "priority", "conflict", "team", "跨团队", "对齐", "优先级", "影响力", "冲突"],
+        "business": ["business", "product", "launch", "customer", "revenue", "retention", "conversion", "adoption", "outcome", "业务", "收入", "转化", "留存", "上线窗口"],
+        "motivation": ["motivation", "fit", "career", "commitment", "long-term", "next step", "为什么加入", "长期投入", "下一阶段"],
+        "english": ["english", "global", "international", "bilingual", "英文", "国际化"],
     }
     for tag, keywords_list in mapping.items():
         if any(keyword in lowered for keyword in keywords_list):
@@ -1576,14 +1869,21 @@ def align_question_bank_signals(
 def score_answer(answer: str, follow_up_answers: list[str], question: Question | None = None) -> tuple[int, float, list[str], list[str], list[str], dict[str, Any]]:
     combined = " ".join([answer] + follow_up_answers).strip()
     strengths = detect_strengths(combined)
-    risks = detect_risks(combined)
-    missing = detect_missing(combined)
+    risks = detect_risks(combined, question)
+    missing = detect_missing(combined, question)
     base = 2
+    evidence_units = text_evidence_units(combined)
+    if evidence_units >= 48:
+        base += 1
     base += min(len(strengths), 3)
+    if len(strengths) >= 4:
+        base += 1
     if len(risks) >= 3:
         base -= 1
     if len(missing) == 0:
         base += 1
+    elif len(missing) >= 3 and len(strengths) <= 1:
+        base -= 1
     score = max(1, min(5, base))
     question_alignment = align_question_bank_signals(question, combined, strengths, risks, missing)
     if question_alignment["matched_good_signals"]:
@@ -1669,7 +1969,10 @@ def final_decision(results: list[QuestionResult], round_scorecards: list[dict[st
 
 def build_profiles(jd_text: str, resume_text: str, level: str, language: str) -> tuple[dict[str, Any], dict[str, Any]]:
     jd_signals = detect_jd_priority_signals(jd_text)
+    role_family = runtime_role_family()
     focus_areas: list[str] = []
+    if jd_signals.get("role_specific_heavy"):
+        focus_areas.append(role_specific_capability_label(role_family))
     if jd_signals.get("architecture_heavy"):
         focus_areas.append("architecture")
     if jd_signals.get("performance_heavy"):
@@ -1679,12 +1982,14 @@ def build_profiles(jd_text: str, resume_text: str, level: str, language: str) ->
     if jd_signals.get("leadership_heavy") or level == "tl":
         focus_areas.append("leadership")
     if not focus_areas:
-        focus_areas = ["android-core", "architecture", "performance", "leadership"]
+        focus_areas = default_focus_areas_for_role(role_family)
 
     resume_lower = resume_text.lower()
     job_profile = {
         "target_level": level,
         "language_mode": language,
+        "role_family": role_family,
+        "target_role": runtime_target_role_label(),
         "keywords": sorted(list(keywords(jd_text)))[:24],
         "focus_areas": focus_areas,
         "priority_signals": jd_signals,
@@ -1694,10 +1999,10 @@ def build_profiles(jd_text: str, resume_text: str, level: str, language: str) ->
         "keywords": sorted(list(keywords(resume_text)))[:24],
         "signals": {
             "contains_metrics": bool(re.search(r"\b\d+(\.\d+)?%|\b\d+ms\b|\b\d+x\b", resume_lower)),
-            "contains_ownership": any(token in resume_lower for token in ["i led", "i owned", "responsible", "ownership"]),
-            "contains_leadership": any(token in resume_lower for token in ["lead", "mentor", "stakeholder", "align", "priority", "conflict"]),
-            "contains_architecture": any(token in resume_lower for token in ["architecture", "modular", "module", "system", "design"]),
-            "contains_english_context": any(token in resume_lower for token in ["english", "global", "international"]),
+            "contains_ownership": any(token in resume_lower for token in GENERIC_OWNERSHIP_TERMS),
+            "contains_leadership": any(token in resume_lower for token in GENERIC_RESUME_LEADERSHIP_TERMS),
+            "contains_architecture": any(token in resume_lower for token in GENERIC_RESUME_ARCHITECTURE_TERMS),
+            "contains_english_context": any(token in resume_lower for token in GENERIC_ENGLISH_TERMS),
         },
     }
     return job_profile, candidate_profile
@@ -1736,6 +2041,9 @@ def build_screening_summary(
 ) -> dict[str, Any]:
     job_profile = job_profile or build_profiles(jd_text, resume_text, level, language)[0]
     candidate_profile = candidate_profile or build_profiles(jd_text, resume_text, level, language)[1]
+    role_label = str(job_profile.get("target_role") or runtime_target_role_label())
+    role_family = str(job_profile.get("role_family") or runtime_role_family())
+    role_capability_label = role_specific_capability_label(role_family)
     jd_signals = dict(job_profile.get("priority_signals", detect_jd_priority_signals(jd_text)))
     resume_gaps = detect_resume_gap_signals(resume_text, candidate_profile, language)
     candidate_signals = dict(candidate_profile.get("signals", {}))
@@ -1754,8 +2062,8 @@ def build_screening_summary(
     elif overlap:
         role_alignment_score = 3.0
     role_alignment_strengths = [f"JD / 简历关键词重叠较多：{', '.join(overlap[:6])}。"] if overlap else []
-    role_alignment_risks = [] if overlap else ["JD 与简历的显式关键词重叠较少，需要通过面试确认真实匹配度。"]
-    role_alignment_missing = [] if len(overlap) >= 2 else ["需要通过项目案例进一步确认 JD 核心要求与实际经历是否贴合。"]
+    role_alignment_risks = [] if overlap else [f"{role_label} JD 与简历的显式关键词重叠较少，需要通过面试确认真实匹配度。"]
+    role_alignment_missing = [] if len(overlap) >= 2 else [f"需要通过项目案例进一步确认 {role_label} 的核心要求与实际经历是否贴合。"]
 
     ownership_score = 4.2 if candidate_signals.get("contains_ownership") else 2.5
     ownership_strengths = ["简历中已出现 ownership / responsible / led 等个人职责信号。"] if candidate_signals.get("contains_ownership") else []
@@ -1767,7 +2075,7 @@ def build_screening_summary(
     metrics_risks = [] if candidate_signals.get("contains_metrics") else ["简历中缺少明显量化结果，后续需要重点追问指标与业务结果。"]
     metrics_missing = [] if candidate_signals.get("contains_metrics") else ["需要补齐基线、指标口径、结果变化和上线后监控表现。"]
 
-    architecture_terms = sum(1 for token in ["architecture", "modular", "module", "system", "design", "trace", "baseline", "performance"] if token in resume_lower)
+    architecture_terms = count_term_hits(resume_lower, GENERIC_RESUME_ARCHITECTURE_TERMS + GENERIC_TRADEOFF_TERMS)
     architecture_score = 3.2
     if architecture_terms >= 4:
         architecture_score = 4.4
@@ -1775,11 +2083,11 @@ def build_screening_summary(
         architecture_score = 3.8
     elif jd_signals.get("architecture_heavy") or jd_signals.get("performance_heavy"):
         architecture_score = 2.8
-    architecture_strengths = ["简历中已有架构 / 模块化 / 性能相关术语，可继续深挖真实深度。"] if architecture_terms >= 2 else []
-    architecture_risks = ["JD 对架构或性能要求较强，但简历中的对应深度信号有限。"] if architecture_terms < 2 and (jd_signals.get("architecture_heavy") or jd_signals.get("performance_heavy")) else []
-    architecture_missing = ["需要通过 round1 / round2 确认真实实现细节、权衡与问题定位能力。"] if architecture_terms < 4 else []
+    architecture_strengths = [f"简历中已出现 {role_capability_label}、架构或性能相关术语，可继续深挖真实深度。"] if architecture_terms >= 2 else []
+    architecture_risks = [f"{role_label} JD 对架构、系统设计或性能要求较强，但简历中的对应深度信号有限。"] if architecture_terms < 2 and (jd_signals.get("architecture_heavy") or jd_signals.get("performance_heavy")) else []
+    architecture_missing = [f"需要通过 round1 / round2 确认候选人在 {role_label} 相关实现细节、权衡与问题定位上的真实能力。"] if architecture_terms < 4 else []
 
-    leadership_terms = sum(1 for token in ["lead", "mentor", "stakeholder", "align", "priority", "conflict", "influence"] if token in resume_lower)
+    leadership_terms = count_term_hits(resume_lower, GENERIC_RESUME_LEADERSHIP_TERMS)
     leadership_score = 3.1
     if leadership_terms >= 4:
         leadership_score = 4.3
@@ -1791,7 +2099,7 @@ def build_screening_summary(
     leadership_risks = ["目标岗位需要更强的领导力 / 跨团队推进证据。"] if leadership_terms < 2 and (level == "tl" or jd_signals.get("leadership_heavy")) else []
     leadership_missing = ["需要在 round3 / HR 环节验证冲突处理、优先级和影响力案例。"] if leadership_terms < 4 else []
 
-    english_terms = sum(1 for token in ["english", "global", "international"] if token in resume_lower)
+    english_terms = count_term_hits(resume_lower, GENERIC_ENGLISH_TERMS)
     english_score = 3.8 if language == "zh" else 3.1
     if language != "zh":
         if english_terms >= 2:
@@ -1806,7 +2114,7 @@ def build_screening_summary(
     english_risks = ["目标流程默认全英文，简历中暂未出现明显英文协作信号。"] if language != "zh" and not (english_terms or candidate_signals.get("contains_english_context")) else []
     english_missing = ["需要在自我介绍和首轮面试中观察英文表达的结构化程度与稳定性。"] if language != "zh" else []
 
-    seniority_terms = sum(1 for token in ["architecture", "ownership", "lead", "mentor", "tradeoff", "rollback", "performance", "module"] if token in resume_lower)
+    seniority_terms = count_term_hits(resume_lower, GENERIC_SENIORITY_TERMS + role_family_keywords(role_family))
     seniority_score = 3.2
     if seniority_terms >= 5:
         seniority_score = 4.3
@@ -1816,9 +2124,9 @@ def build_screening_summary(
         seniority_score = 2.9
     if level == "tl" and leadership_terms < 2:
         seniority_score = min(seniority_score, 2.8)
-    seniority_strengths = ["简历文本已出现较多资深 / TL 常见信号词，可进一步验证其真实性。"] if seniority_terms >= 3 else []
-    seniority_risks = ["目标级别是 senior / TL，但当前文本证据对 scope 和 seniority 上限支撑还不够强。"] if seniority_terms < 3 and level in {"senior", "tl"} else []
-    seniority_missing = ["需要通过架构深挖、业务复盘和影响力案例确认是否达到目标级别。"] if seniority_terms < 5 else []
+    seniority_strengths = [f"简历文本已出现较多 {role_label} 资深 / TL 常见信号词，可进一步验证其真实性。"] if seniority_terms >= 3 else []
+    seniority_risks = [f"目标级别是 {level}，但当前文本证据对 scope 和 seniority 上限支撑还不够强。"] if seniority_terms < 3 and level in {"senior", "tl"} else []
+    seniority_missing = [f"需要通过 {role_capability_label} 深挖、业务复盘和影响力案例确认是否达到目标级别。"] if seniority_terms < 5 else []
 
     dimensions = [
         _screening_dimension(
@@ -1859,7 +2167,7 @@ def build_screening_summary(
             architecture_strengths,
             architecture_risks,
             architecture_missing,
-            "判断简历是否已经暴露出值得继续深挖的架构、性能或实现复杂度信号。",
+            f"判断简历是否已经暴露出值得继续深挖的 {role_capability_label}、架构、性能或实现复杂度信号。",
         ),
         _screening_dimension(
             "leadership_signal",
@@ -1936,7 +2244,7 @@ def build_screening_summary(
         "top_strengths": top_strengths,
         "notes": [
             "这是基于 JD 与简历文本的预筛选结果，不等于最终面试结论。",
-            "逐轮面试会继续验证 ownership、指标、技术深度、业务理解和英文表达等能力。",
+            f"逐轮面试会继续验证 ownership、指标、{role_capability_label}、业务理解和英文表达等能力。",
         ],
     }
 
@@ -1995,6 +2303,9 @@ def build_resume_prep(
     job_profile: dict[str, Any] | None = None,
     candidate_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    role_label = runtime_target_role_label()
+    role_family = runtime_role_family()
+    role_capability_label = role_specific_capability_label(role_family)
     job_profile = job_profile or build_profiles(jd_text, resume_text, level, language)[0]
     candidate_profile = candidate_profile or build_profiles(jd_text, resume_text, level, language)[1]
     interview_plan = interview_plan or {"rounds": []}
@@ -2004,12 +2315,14 @@ def build_resume_prep(
     candidate_signals = dict(candidate_profile.get("signals", {}))
     focus_tags = list(screening_summary.get("recommended_focuses", []))[:4]
     keyword_overlap = list(screening_summary.get("keyword_overlap", []))[:6]
+    profile_focus_areas = [str(item).strip() for item in job_profile.get("focus_areas", []) if str(item).strip()]
+    intro_strength_anchor = "、".join(profile_focus_areas[:2]) or role_label
 
     rewrite_action_map = {
         "role_alignment": "把简历项目标题、项目背景和 JD 关键词对齐，避免只写技术名词，不写业务场景。",
         "ownership_evidence": "每个重点项目至少补一条“我负责什么”的主语化表述，避免只写团队结果。",
         "metrics_orientation": "为每个重点项目补齐基线、指标口径、优化动作和最终变化结果。",
-        "architecture_depth_signal": "为至少一个项目补齐架构演进、权衡取舍、问题定位和回滚复盘。",
+        "architecture_depth_signal": f"为至少一个项目补齐 {role_capability_label}、架构演进、权衡取舍、问题定位和回滚复盘。",
         "leadership_signal": "补一段跨团队推进或冲突处理案例，体现影响力而不是只体现执行。",
         "english_readiness": "准备 60-90 秒英文自我介绍，并把一个核心项目用英文讲清职责、指标和 tradeoff。",
         "seniority_scope": "明确写出项目 scope、复杂度、影响范围和你在关键决策中的角色。",
@@ -2039,8 +2352,8 @@ def build_resume_prep(
         )
 
     intro_story_order = [
-        "当前最匹配岗位的一段 Android 主线经历",
-        "一个能证明你资深度的代表项目",
+        f"当前最匹配岗位的一段 {role_label} 主线经历",
+        f"一个能证明你具备 {role_label} 资深度的代表项目",
         "你亲自负责的关键职责与结果指标",
         "为什么这段经历与目标 JD 贴合",
     ]
@@ -2052,7 +2365,7 @@ def build_resume_prep(
         intro_watchouts.append("先用英文说完整主干，再视需要补充中文术语。")
 
     self_intro_blueprint = {
-        "opening_positioning": f"我是一个以 Android {level} 级别职责为目标的候选人，最近的核心优势集中在 {', '.join(focus_tags[:2]) or 'Android delivery'}。",
+        "opening_positioning": f"我是一个以 {role_label} {level} 级别职责为目标的候选人，最近的核心优势集中在 {intro_strength_anchor}。",
         "story_order": intro_story_order,
         "metric_prompt": "自我介绍里至少提前埋一个可量化结果，方便后续面试深挖。",
         "fit_statement": f"把 JD 里的关键词自然融入收尾，例如：{', '.join(keyword_overlap[:4]) or 'ownership, architecture, performance'}。",
@@ -2062,7 +2375,8 @@ def build_resume_prep(
     likely_probe_map = {
         "ownership": "请明确说清这个项目里你亲自负责了什么，以及不是你负责的部分是什么。",
         "delivery_scope": "这个项目的业务目标、影响范围和你的决策边界分别是什么？",
-        "android_core": "你如何证明自己不是只会背概念，而是真的处理过 Android 生命周期和状态问题？",
+        "android_core": f"你如何证明自己不是只会背概念，而是真的处理过 {role_label} 相关的关键复杂问题？",
+        "technical_depth": f"你做过的 {role_label} 项目里，哪一个最能体现你的核心专业深度？请讲具体实现、问题定位和最终结果。",
         "architecture": "讲一个你做过的架构取舍，为什么不是另一个更直接的方案？",
         "performance": "你的性能优化 baseline、关键指标、回归保护和上线观测分别是什么？",
         "tradeoff_reasoning": "如果今天重做一次，你还会选同一个方案吗？为什么？",
@@ -2071,7 +2385,7 @@ def build_resume_prep(
         "business_understanding": "业务约束改变后，你最先调整方案的哪一部分？",
         "leadership": "请讲一个带节奏、做优先级或处理冲突的真实例子。",
         "motivation": "为什么你会选择这个机会，而不是一个更稳定或更熟悉的岗位？",
-        "english_interview": "Please walk me through your strongest Android project in English, with ownership and metrics.",
+        "english_interview": f"Please walk me through your strongest {role_label} related project in English, with ownership and metrics.",
     }
     likely_interviewer_probes = []
     for focus in focus_tags:
@@ -2082,7 +2396,7 @@ def build_resume_prep(
     resume_rewrite_checklist = [
         "每个重点项目至少保留一条主语清晰的 ownership 句子。",
         "每个重点项目至少补一个结果指标或影响范围。",
-        "至少准备一个 architecture / performance / tradeoff 深挖项目。",
+        f"至少准备一个 {role_capability_label} / architecture / performance / tradeoff 深挖项目。",
         "至少准备一个跨团队推进或冲突处理案例。",
     ]
     if not candidate_signals.get("contains_metrics", False):
@@ -3065,7 +3379,7 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Android 面试报告 - {{ session.session_id }}</title>
+  <title>{{ runtime_display_name() }} 报告 - {{ session.session_id }}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif; margin: 2rem auto; max-width: 1180px; line-height: 1.7; color: #17202a; background: linear-gradient(180deg, #f3f7fb 0%, #eef5f2 100%); }
     h1, h2, h3 { color: #0f2a43; }
@@ -3123,7 +3437,7 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
   </style>
 </head>
 <body>
-  <h1>Android 面试报告</h1>
+  <h1>{{ runtime_display_name() }} 报告</h1>
   <p>
     <span class="badge">会话 {{ session.session_id }}</span>
     <span class="badge">结论 {{ zh_decision(score.final_decision) }}</span>
@@ -3861,6 +4175,7 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
         zh_focus_name=zh_focus_name,
         zh_focus_list=zh_focus_list,
         zh_internal_text=zh_internal_text,
+        runtime_display_name=runtime_display_name,
         stage_label=stage_label,
         evidence_summary=evidence_summary,
         zh_final_summary=zh_final_summary_text(),
@@ -3874,11 +4189,12 @@ def render_report(path: Path, session_data: dict[str, Any], score_data: dict[str
 
 
 def render_reject_mail(path: Path, session_id: str, hard_fail_flags: list[str], round_summaries: list[RoundSummary] | None = None) -> None:
+    display_name = runtime_display_name()
     lines = [
         "<!DOCTYPE html>",
         "<html lang=\"en\"><body>",
         "<p>Dear candidate,</p>",
-        f"<p>Thank you for taking part in the Android interview session ({session_id}). After reviewing the interview evidence, we will not move forward this time.</p>",
+        f"<p>Thank you for taking part in the {display_name} session ({session_id}). After reviewing the interview evidence, we will not move forward this time.</p>",
         "<p>Key concerns:</p>",
         "<ul>",
     ]
@@ -3955,7 +4271,9 @@ def synthesize_summary_artifacts(
     volume: str = "+0%",
 ) -> list[str]:
     tts_dir = output_dir / "tts"
-    opening = "Welcome to the Android senior interview practice session. We will assess Android fundamentals, architecture, performance, leadership, and evidence quality."
+    display_name = runtime_display_name()
+    role_label = runtime_target_role_label()
+    opening = f"Welcome to the {display_name} practice session. We will assess {role_label} fundamentals, architecture, performance, leadership, and evidence quality."
     questions = " ".join(
         [
             f"In {ROUND_LABELS.get(result.round, result.round)}, question: {result.spoken_question or result.question}"
@@ -4053,6 +4371,8 @@ def session_payload(
     panel_memos: list[dict[str, Any]] | None = None,
     question_bank_validation: dict[str, Any] | None = None,
     resume_prep: dict[str, Any] | None = None,
+    materials: dict[str, Any] | None = None,
+    template_resolution: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summaries = round_summaries or build_round_summaries(results)
     decision = final_decision_value or "completed"
@@ -4081,6 +4401,8 @@ def session_payload(
         "consistency_summary": consistency_summary or {},
         "question_bank_validation": question_bank_validation or {},
         "resume_prep": resume_prep or {},
+        "materials": materials or {},
+        "template_resolution": template_resolution or {},
         "question_records": [serialize_question_record(item) for item in results],
         "terminated_early": terminated,
         "termination_reason": hard_fail_flags[0] if hard_fail_flags else "",

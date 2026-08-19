@@ -1,0 +1,131 @@
+template_id: android_senior
+display_name: Android Senior Interview
+template_type: preset
+version: 1
+enabled: true
+aliases:
+  - android
+  - android senior
+  - senior android
+  - 安卓
+  - 安卓面试
+target_role: Android Engineer
+role_family: android
+candidate_level: senior
+supported_levels:
+  - mid
+  - senior
+  - tl
+default_language: en
+default_speech_language: auto
+persona_defaults:
+  default_persona: 引导教练型
+  round_overrides:
+    intro: 引导教练型
+    screening: 引导教练型
+    round1: 技术深挖型
+    round2: 连环拷问型
+    round3: 业务结果型
+    hr: 领导力评估型
+question_bank_rules:
+  allowed_rounds:
+    - intro
+    - screening
+    - round1
+    - round2
+    - round3
+    - hr
+  allowed_levels:
+    - mid
+    - senior
+    - tl
+  allowed_languages:
+    - zh
+    - en
+    - bilingual
+  allowed_difficulties:
+    - L1
+    - L2
+    - L3
+    - L4
+    - L5
+rounds:
+  - round_id: intro
+    label:
+      en: Self Introduction
+      zh: 自我介绍
+    enabled: true
+    order: 10
+    goal: Build role fit and project anchor.
+    default_language: auto
+    target_question_count: 1
+    focuses:
+      - communication
+      - project_authenticity
+      - english_interview
+  - round_id: screening
+    label:
+      en: Screening
+      zh: 初筛
+    enabled: true
+    order: 20
+    goal: Validate ownership, authenticity, and delivery scope.
+    default_language: auto
+    target_question_count: 1
+    focuses:
+      - ownership
+      - resume_authenticity
+      - delivery_scope
+  - round_id: round1
+    label:
+      en: Round 1
+      zh: 第一轮
+    enabled: true
+    order: 30
+    goal: Probe Android fundamentals and implementation detail.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - android_core
+      - problem_solving
+      - implementation_detail
+  - round_id: round2
+    label:
+      en: Round 2
+      zh: 第二轮
+    enabled: true
+    order: 40
+    goal: Probe architecture, performance, and tradeoffs.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - architecture
+      - performance
+      - tradeoff_reasoning
+  - round_id: round3
+    label:
+      en: Round 3
+      zh: 第三轮
+    enabled: true
+    order: 50
+    goal: Probe business understanding and technical influence.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - business_understanding
+      - technical_influence
+      - cross_team_execution
+  - round_id: hr
+    label:
+      en: HR Interview
+      zh: HR 面
+    enabled: true
+    order: 60
+    goal: Probe motivation, maturity, and stability.
+    default_language: auto
+    target_question_count: 2
+    focuses:
+      - motivation
+      - conflict_handling
+      - leadership
+      - stability
