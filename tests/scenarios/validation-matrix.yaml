@@ -218,8 +218,6 @@ skills:
             - '题库对齐度'
       acceptance:
         - writes_local_artifacts: true
-        - generates_tts_audio: true
-        - keeps_evidence_based_scoring: true
     - name: interactive_session
       platform: claude-code
       scenario_file: android-interview/claude-code-interactive-session.md
@@ -1250,3 +1248,129 @@ skills:
       acceptance:
         - terminates_early: true
         - writes_failure_artifacts: true
+  xiaohongshu-poem-fill:
+    - name: structure
+      platform: claude-code
+      scenario_file: xiaohongshu-poem-fill/claude-code-structure.md
+      input: "请使用 xiaohongshu-poem-fill skill，生成一条诗词填空玩法，并说明本地封面如何渲染。"
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - agents/openai.yaml
+          - references/01-output-contract.md
+          - references/02-poem-generation-rules.md
+          - references/03-cover-system.md
+          - references/04-local-rendering.md
+          - scripts/render_xhs_cover.py
+          - assets/generated/styles/bg-ink-mountain.png
+          - assets/generated/styles/bg-paper-minimal.png
+        required_file_contains:
+          SKILL.md:
+            - "This skill is Markdown-first."
+            - "Read these references before generating output"
+            - "local Python script is an optional helper"
+          references/03-cover-system.md:
+            - "诗词填空 · 画龙点睛挑战"
+            - "render Chinese text locally"
+          references/04-local-rendering.md:
+            - "scripts/render_xhs_cover.py"
+            - "bg-*.png"
+      acceptance:
+        - markdown_first_contract_is_present: true
+        - reusable_templates_are_bundled: true
+        - local_renderer_is_documented: true
+    - name: structure
+      platform: codex
+      scenario_file: xiaohongshu-poem-fill/codex-structure.md
+      input: "请使用 xiaohongshu-poem-fill skill，生成一条诗词填空玩法，并说明本地封面如何渲染。"
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - agents/openai.yaml
+          - references/01-output-contract.md
+          - references/02-poem-generation-rules.md
+          - references/03-cover-system.md
+          - references/04-local-rendering.md
+          - scripts/render_xhs_cover.py
+          - assets/generated/styles/bg-ink-mountain.png
+          - assets/generated/styles/bg-paper-minimal.png
+        required_file_contains:
+          SKILL.md:
+            - "This skill is Markdown-first."
+            - "Read these references before generating output"
+            - "local Python script is an optional helper"
+          references/03-cover-system.md:
+            - "诗词填空 · 画龙点睛挑战"
+            - "render Chinese text locally"
+          references/04-local-rendering.md:
+            - "scripts/render_xhs_cover.py"
+            - "bg-*.png"
+      acceptance:
+        - markdown_first_contract_is_present: true
+        - reusable_templates_are_bundled: true
+        - local_renderer_is_documented: true
+  food-recipe-post:
+    - name: structure
+      platform: claude-code
+      scenario_file: food-recipe-post/claude-code-recipe-post.md
+      input: "请使用迁移后的 daily-recipe-social-post 内容，生成一条小红书每日菜谱推荐，包含标题、封面图和 500 字以内制作流程正文。"
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - agents/openai.yaml
+          - references/cover-style.md
+        required_file_contains:
+          SKILL.md:
+            - "REQUIRED SUB-SKILL"
+            - "Use `baoyu-imagine` when generating cover images."
+            - "Single-dish work (default): exactly 2 cover images."
+            - "Multi-dish work: exactly `dish_count + 1` cover images."
+            - "Write the post body in Chinese, 500字以内."
+            - "Dish Naming Rules"
+            - "Do not make the visible dish name end with serving-container or meal-format words"
+            - "Cooked Food Realism Rules"
+            - "Rice realism is critical"
+          references/cover-style.md:
+            - "明亮浅色"
+            - "中文手写体"
+            - "不要使用暗色系"
+            - "calories badge"
+            - "Visible dish names should be standardized dish-style names"
+            - "Rice realism is critical"
+            - "oversized hard grains"
+      acceptance:
+        - migrated_source_skill_contract_is_present: true
+        - daily_recipe_default_is_single_dish: true
+        - baoyu_prompt_workflow_is_documented: true
+    - name: structure
+      platform: codex
+      scenario_file: food-recipe-post/codex-recipe-post.md
+      input: "请使用迁移后的 daily-recipe-social-post 内容，生成一条抖音每日美食作品，包含菜品预览摆盘图、每道菜菜谱详情图和短正文。"
+      validator:
+        type: skill-structure
+        required_files:
+          - SKILL.md
+          - agents/openai.yaml
+          - references/cover-style.md
+        required_file_contains:
+          SKILL.md:
+            - "菜品预览摆盘图"
+            - "菜谱详情图"
+            - "Before writing cover prompts, read `references/cover-style.md`."
+            - "Every recipe poster must include a visible calories badge or strip"
+            - "Cover-visible dish names are standardized dish names"
+            - "Prompts specify cooked-food realism"
+          references/cover-style.md:
+            - "Prompt requirements"
+            - "Vertical 3:4."
+            - "Ingredient form must be faithful to the recipe"
+            - "avoid black background"
+            - "should not end with container or meal-format words"
+            - "cooked-rice realism"
+      acceptance:
+        - migrated_source_skill_contract_is_present: true
+        - bright_handwritten_style_is_documented: true
+        - ingredient_realism_rules_are_present: true
