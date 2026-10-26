@@ -66,6 +66,17 @@ def build_package(skill_dir: Path, platform: str, version: str) -> dict[str, str
         copy_tree(skill_dir / "scripts", staging_dir / "scripts")
         copy_tree(skill_dir / "assets", staging_dir / "assets")
 
+        extra_files = skill_dir / "package-files.txt"
+        if extra_files.exists():
+            for entry in extra_files.read_text(encoding="utf-8").splitlines():
+                if not entry.strip():
+                    continue
+                source = (skill_dir / entry).resolve()
+                if not source.is_relative_to(skill_dir.resolve()) or not source.exists():
+                    raise ValueError(f"Invalid package file: {entry}")
+                relative = source.relative_to(skill_dir.resolve())
+                copy_tree(source, staging_dir / relative)
+
         if platform == "codex":
             copy_tree(skill_dir / "agents", staging_dir / "agents")
         overlay_dir = skill_dir / "platforms" / platform

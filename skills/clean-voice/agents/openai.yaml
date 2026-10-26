@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Voice 人声提取与裁剪"
+  short_description: "从本地音视频或链接中分离人声、去除背景音乐和噪声，并按时间或句子裁剪"
+  default_prompt: "使用 $clean-voice 从我提供的文件或链接提取干净人声，并按我的描述裁剪后导出 WAV 和 M4A。"

@@ -3,6 +3,42 @@ platforms:
   - claude-code
   - codex
 skills:
+  clean-voice:
+    - name: standalone_platform_packages
+      platform: claude-code
+      input: "Build both platform archives and verify that each extracted skill runs and installs independently, without model downloads."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - -m
+          - unittest
+          - discover
+          - -s
+          - tests/tooling
+          - -v
+        expected_contains:
+          - "test_each_platform_archive_runs_and_installs_independently"
+          - "OK"
+    - name: portable_installers
+      platform: codex
+      input: "Verify the Claude Code, Codex, and DeepSeek Harness installer targets and the standalone source archive. This does not test assistant natural-language invocation."
+      validator:
+        type: command-artifacts
+        command:
+          - python3
+          - -m
+          - unittest
+          - discover
+          - -s
+          - skills/clean-voice/tests
+          - -p
+          - test_install.py
+          - -v
+        expected_contains:
+          - "test_each_host_gets_a_self_contained_skill"
+          - "test_package_contains_no_user_audio_or_model_weights"
+          - "OK"
   word-counter:
     - name: mixed_text_count
       platform: claude-code
