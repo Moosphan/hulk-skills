@@ -1,5 +1,5 @@
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.zh-CN.md)
-[![Skills](https://img.shields.io/badge/Skills-9-green)](./README.zh-CN.md)
+[![Skills](https://img.shields.io/badge/Skills-10-green)](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@ It is designed to turn repeatable engineering, content, automation, and producti
 
 ## Highlights
 
-- 9 skills: `word-counter`, `readme-generator`, `android-interview`, `xiaohongshu-poem-fill`, `food-recipe-post`, `daily-outfit-social-post`, `clean-voice`, `ai-daily-paper`, and `cinematic-shortfilm`
+- 10 skills: `word-counter`, `readme-generator`, `android-interview`, `xiaohongshu-poem-fill`, `food-recipe-post`, `daily-outfit-social-post`, `clean-voice`, `ai-daily-paper`, `cinematic-shortfilm`, and `whale-video`
 - Local speech extraction, denoising, and natural-language trimming with `clean-voice`, including a DeepSeek Harness installer
 - Dual-platform scenario validation for `Claude Code` and `Codex`
 - Buildable install packages for both platforms
@@ -42,6 +42,7 @@ hulk-skills/
 │   ├── daily-outfit-social-post/
 │   ├── food-recipe-post/
 │   ├── readme-generator/
+│   ├── whale-video/
 │   ├── xiaohongshu-poem-fill/
 │   └── word-counter/
 ├── tests/
@@ -54,6 +55,7 @@ hulk-skills/
 
 ## Skills
 
+- `whale-video` - Whale Girl work-diary video workflow with narration, visual and emote guides, 20 character emotes, a cover font, and a Remotion example; additional audio, screenshots, and QA tools must be supplied by the video project
 - `cinematic-shortfilm` - cinematic science short-film workflow covering scripts, narration, Remotion/Canvas/SVG visuals, synthesized music, mixing, 4K delivery, fact-checking, and publishing assets; references external Remotion projects
 - `word-counter` - deterministic Chinese / English / mixed text counting
 - `readme-generator` - evidence-first README generation and refactoring
