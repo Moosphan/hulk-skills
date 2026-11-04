@@ -55,7 +55,7 @@ hulk-skills/
 
 ## Skills
 
-- `whale-video` - Whale Girl work-diary video workflow with narration, visual and emote guides, 20 character emotes, a cover font, and a Remotion example; additional audio, screenshots, and QA tools must be supplied by the video project
+- `whale-video` - Whale Girl work-diary video workflow with narration, visual and emote guides, 20 character emotes, 12 chibi assets, a cover font, reusable episode templates, and a Remotion example; additional audio, screenshots, and QA tools must be supplied by the video project
 - `cinematic-shortfilm` - cinematic science short-film workflow covering scripts, narration, Remotion/Canvas/SVG visuals, synthesized music, mixing, 4K delivery, fact-checking, and publishing assets; references external Remotion projects
 - `word-counter` - deterministic Chinese / English / mixed text counting
 - `readme-generator` - evidence-first README generation and refactoring

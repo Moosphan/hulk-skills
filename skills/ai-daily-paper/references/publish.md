@@ -39,3 +39,45 @@ catbus bilibili item publish -a main --video <mp4> --title "..." --cover <png> -
 1. 封面点击率（换标题/封面前后对比）
 2. 前 15 秒留存（片头是否太长）
 3. 榜单页是否被拖拽/跳出
+
+## 晚间增量发布（2026-11-04）
+- 标题前缀：`【AI晚报·晚间增量】`
+- 分区：`--category 201`（科学科普）
+- 封面：取正片 5s 处含「正式发布」标题的帧，`ffmpeg -ss 5 -frames:v 1`
+- 简介必须写：
+  - 时长 + 时间节点
+  - 证据来源（官方页面 / 官方演示视频 / benchmark）
+  - 增量门禁说明：本次 N 条，是否 P0 例外
+- 发布后回填 BV、时长、条目，并置顶时间节点评论
+- 增量门禁未通过且非 P0：不发视频，改文字动态
+
+## 双封面发布（强制，2026-11-04）
+B 站允许横版 16:9 与竖版 4:3 两张封面。每次发布**必须同时上传两版**。
+
+### 发布前自检
+```bash
+node ~/self-projects/catbus/dist/cli/main.js bilibili item publish --help | grep -i cover
+```
+- 若同时出现 `--cover` 与 4:3 专用参数（如 `--cover-43` / `--cover43`）→ 两版都传
+- 若只有 `--cover` → 说明本地 catbus 未包含双封面 PR：
+  1. 先切到对应 PR 分支并 `pnpm build`
+  2. 再发布；不允许只传 16:9 就发
+
+### 命令模板
+```bash
+node ~/self-projects/catbus/dist/cli/main.js -a main bilibili item publish \
+  --video <成片.mp4> \
+  --cover <16x9.jpg> \
+  --cover-43 <4x3.jpg> \
+  --title "..." --text @desc.txt --category 201 --tag ...
+```
+（4:3 参数名以 `--help` 实际输出为准）
+
+### 交付包对应关系
+| 文件 | 用途 |
+|---|---|
+| `xxx-封面16x9.jpg` | `--cover` |
+| `xxx-封面4x3.jpg` | 4:3 专用参数 |
+| `xxx.mp4` | `--video` |
+
+只交一张封面 = 未完成。

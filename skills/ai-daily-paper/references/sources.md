@@ -65,3 +65,41 @@
 - 模型更新：OpenAI / Anthropic / Google / Meta / Mistral / Qwen / DeepSeek / 智谱 / MiniMax / Kimi
 - Tibo（@thsottiaux）与 ChatGPT / Codex 额度、重置、灰度
 - 榜单：LiveBench（能力）、OpenRouter（使用量）、Artificial Analysis（价格，需代理）
+
+## 资讯源白名单与禁忌（2026-11-04）
+- **不用** IT之家（广告多、二手编译）
+- 优先：机器之心、量子位、新智元、36氪、InfoQ、硅星人；官方博客/新闻室为 T1
+- 海外：Reuters / The Verge / TechCrunch / FT + 官方账号 X 原帖
+
+## 开源项目必挖（强制）
+涉及「开源 / 开放权重 / 模型发布」的资讯，必须找到项目源头：
+1. GitHub 仓库（README：架构、参数、License、Model Links）
+2. Releases / Tags（版本、发布时间、变更）
+3. HuggingFace 模型卡
+4. 截图至少 1 张 README + 1 张 release/Model Links
+- 若尚无 release，明确写「仓库已建、暂无 release」，不许省略
+
+## 新模型 / 新产品发布：官方优先（2026-11-04 强化）
+1. **先查官网新闻室 / 官方博客**，用原文的标题、日期、数字、图、视频
+2. 官方页面自带 benchmark 图、demo 视频、定价表 → 直接截，不用媒体二手
+3. 官方口径里的数字（分数、通过率、价格）优先于任何媒体转述
+
+### 版本必须对齐
+- 发布的是 **正式版** 就只引正式版资料
+- **禁止**把 preview / beta 的参数、repo、图表当成正式版证据
+- 正式版还没有 repo / HF 模型卡时：**不放**，写「权重近期开源，仓库尚未发布」
+- 开源项目位置查询顺序：官方新闻稿里的链接 → GitHub org → HuggingFace org → 官方文档
+
+### 禁止
+- 用过时版本的 README / 参数冒充新版本
+- 用媒体截图替代官方 benchmark 图（官方有图就必须用官方）
+
+## 官方模型页的「图 + 视频」挖掘（2026-11-04）
+- 混元官方研究页：`https://hunyuan.tencent.com/research/<model>`（SPA，需等 10–20s 直到 Loading 消失）
+- 页面里直接有 `<video>` 演示，`video.currentSrc` 就是可下载的 mp4（COS 签名链接）
+- 抓法：
+  1. Playwright 打开页面，轮询到正文出现
+  2. `document.querySelectorAll('video')` 取 `currentSrc`
+  3. `ffmpeg -t 8 -an` 裁成 8 秒静音片段，作为视频卡证据
+- 同时截页面各段（hero / demo / benchmark），避免全片都是文字
+- 官方新闻稿 `tencent.com` 有 benchmark 图；官方研究页有 demo 视频，两者都要用

@@ -127,12 +127,20 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 
 一屏里**语义色不超过 2 种**；颜色只跟随含义，不按页轮换。
 
-### 2.5 人物：20 张表情素材
+### 2.5 人物：两套素材，别混用
 
-- 素材：本 skill 的 `assets/emotes/`（`01-happy.png` … `20-heart.png`），1408×1408、RGBA 透明、半身、成人比例。
-- 每集挑 8–10 张，**每场一张**；片头固定 15（招呼），片尾固定 20（比心）。
-- 放置：`right: -30`、`bottom: -140`、`height: 980–1030`，上下浮动 9px，落影 `drop-shadow(0 40px 70px rgba(0,0,0,.55))`。
-- 逐张用法、情绪强度、不要用在哪，见 [`EMOTES.md`](EMOTES.md)。
+| 套 | 素材 | 画幅 | 默认用途 |
+|---|---|---|---|
+| **半身成人** | `assets/emotes/` 20 张 | 1408×1408 | 正片特写、情绪细腻的段落 |
+| **Q 版全身** | `assets/chibi/` 12 张（10 表情 + 2 换装） | 1536×2048 | 封面、片头片尾、轻喜剧、换装集 |
+
+规则：
+
+1. **一集只用一套**，同屏不许混。
+2. 正片默认半身；封面默认 Q 版全身（站姿完整、更好摆）。
+3. 半身：每场一张、`right: -30`、`height: 980–1030`、浮动 9px。
+4. Q 版：按可见区定位、脚底压出画框 10px；封面 16:9 用 `hr 1.35`，4:3 用 `1.22`（整张画布比，可见区只占 63%）。
+5. 逐张用法：半身见 [`EMOTES.md`](EMOTES.md)，Q 版见 [`CHIBI.md`](CHIBI.md)。
 
 ### 2.6 字幕与安全区
 
@@ -193,6 +201,24 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 - 时间 20:00–21:00，合集《鲸鱼娘的打工日记》
 - 封面：按 `VISUAL-SYSTEM.md §9` 出，**一次出 16:9 与 4:3 两版**；深海底不变、紫色角标、珊瑚色块、快乐体主标题、双角标，文字只留 3 块 + 1 个合规标
 
+### 6.1 发布执行（catbus）
+
+```bash
+catbus bilibili item publish \
+  --title "【鲸鱼娘打工日记 Day N】…" \
+  --text @desc.txt \
+  --video out/checkup.mp4 \
+  --cover out/cover-16x9.jpg --cover43 out/cover-4x3.png \
+  --tag 人工智能 --tag AI --tag 鲸鱼娘 --tag AI打工日记 \
+  --category 231 --visibility public -y
+```
+
+- **`--cover` 是 16:9（播放页），`--cover43` 是 4:3（稿件列表页），两张必须同时给。** 少给一张，列表页就只能用系统裁切，构图会歪。
+- `--category 231` = 科技 / 计算机技术，和系列已发稿件保持一致（不是 188 科技大区）。
+- 只换封面不用重传视频：`catbus bilibili item edit <BV> --cover a16.jpg --cover43 a43.png`（提交后会重新审核）。
+- 需要带 `--cover43` 的 catbus（对应提交 a4c2416 / PR #44）。npm 上的 0.2.1 还没有，本地分支构建即可，不必等合并：`git archive a4c2416 | tar -x -C /tmp/catbus-dual`，链上原仓库 node_modules 后 `npm run build`，用 `node dist/cli/main.js` 跑。
+- 发布后检查：稿件列表页的缩略是不是 4:3 那张，不是就说明 `--cover43` 没生效。
+
 ## 7. 统一片头 / 片尾（强制）
 
 ### 片头（0–6.8s）
@@ -233,3 +259,39 @@ B 站样式三连图标，依次 spring 弹出：
 > 若 `$W` 不可写（沙箱限制），在会话工作区起一个平行项目（可参考 `examples/checkup/` 的工程结构）：`node_modules` 用**逐包软链**指向已有 Remotion 工程（整目录软链会让 `.cache` 不可写，报 `EPERM ... node_modules/.cache/webpack`），渲染加 `--bundle-cache=false`。
 
 > 项目内的 `MEMORY-配音与视觉.md` 是本文的同步副本；两者冲突时以本文为准。
+
+## 9. 模板复用（强制，2026-11-04）
+
+每期必须从 `templates/episode/` 起步，**不允许重写背景/片头/片尾/物件皮肤**。
+
+### 固定组件（唯一来源）
+| 组件 | 文件 | 规则 |
+|---|---|---|
+| 背景 | `templates/episode/ui.tsx` → `Backdrop` | 深海夜光，4 光柱 + 3 焦散 + 34 泡 + 鲸影 + 暗角；禁止另写渐变/光效 |
+| 顶栏 | `HUD` | 左 92 / 上 46，标题 + 珊瑚 tag + 副标 |
+| 字幕 | `Caption` | 44px、单行、宽 1360、top 872 |
+| 物件纸 | `Paper` / `Stamp` | 纸色 #F8F4E9 + 色头 + 投影；形态按内容换（手机/工牌/收据/监控/报价单/合同） |
+| 人物 | `assets/emotes`（正片）/ `assets/chibi`（封面、片头尾） | 一集只用一套，高度 1040、右 -30、底 -140 |
+| 片头 | Episode 内 `intro` | 0–6.8s，DAY 标签 + 我是小紫 + 本集主题 |
+| 片尾 | `Outro` | 132px 三连、gap 80、top 512、spring 11/.5/160 |
+| 封面 | `templates/episode/Cover.tsx` | 必须用同一个 `Backdrop` 渲染 still，禁止 PIL 另画背景 |
+
+### 新一集流程
+1. 复制 `theme.ts` / `ui.tsx` / `Cover.tsx` 到新工程
+2. 只写 `cues.json` 与 `Episode.tsx`（按 scene 切场，每场 ≥2 物件）
+3. `npx remotion still Cover ...` 出 16:9 与 4:3 封面
+4. `npx remotion render` 出片
+5. 跑 `audit_ep.py` + `qa_ep.py`
+
+### 禁止
+- 用 `assets/art/WechatIMG*.png` 等非规范素材
+- 封面用 PIL 画光柱/渐变（会和正片不一致）
+- 改动 Backdrop 参数（光柱位置、透明度、气泡数）
+
+### 封面文字排版（@1080p 基准，2026-11-04）
+- 主标题 190px，两行；**行间距 ≥ 30px**（`lineHeight 1.16` + 行间 30px），不许贴在一起
+- 关键词色块内边距 `14px × 26px`，色块高度随字号，不压上一行
+- 主标题 → 副标间距 ≥ 34px
+- 副标 58–64px，单行
+- 主标题左对齐 x=96，角标在上方 97px
+- 参考同行：两行标题之间能塞进一条色块高度的一半，不能粘连

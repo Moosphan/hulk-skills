@@ -120,9 +120,11 @@ background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
 - 蓝 `#00AEEC`「赞」/ 粉 `#FB7299`「+」/ 金 `#FFB800`「币」，字号 56。
 - spring damping 11，错峰 0.33s。
 
-## 4. 表情素材（20 张）
+## 4. 人物素材（两套）
 
-位置：skill 内 `assets/emotes/`（20 张，`01-happy.png` … `20-heart.png`）；逐张场景用法见 [`EMOTES.md`](EMOTES.md)。
+**半身成人**：`assets/emotes/`（20 张）——正片特写用；逐张用法见 [`EMOTES.md`](EMOTES.md)。
+
+**Q 版全身**：`assets/chibi/`（10 表情 + 2 换装，1536×2048）——封面、片头片尾、轻喜剧用；用法见 [`CHIBI.md`](CHIBI.md)。
 
 放置参数：`right: -30`、`bottom: -140`、`height: 980–1030`、浮动 9px、`drop-shadow(0 40px 70px rgba(0,0,0,.55))`；片头 15、片尾 20 固定。
 
@@ -280,6 +282,8 @@ background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
 | 光晕 | (1480, 400) r560 | (1150, 392) r400 |
 
 生成：`cover.py` 默认输出 `out/cover-16x9.png` 与 `out/cover-4x3.png`。
+
+**发布时两张一起传**：`--cover` 给 16:9（播放页）、`--cover43` 给 4:3（稿件列表页）。只传 16:9 的话，列表页会按系统规则裁切，构图会歪。详见 SKILL §6.1。
 
 ### 9.9 验收
 
