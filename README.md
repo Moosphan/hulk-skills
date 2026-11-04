@@ -1,5 +1,5 @@
 [![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.zh-CN.md)
-[![Skills](https://img.shields.io/badge/Skills-7-green)](./README.zh-CN.md)
+[![Skills](https://img.shields.io/badge/Skills-8-green)](./README.zh-CN.md)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@ It is designed to turn repeatable engineering, content, automation, and producti
 
 ## Highlights
 
-- 7 skills: `word-counter`, `readme-generator`, `android-interview`, `xiaohongshu-poem-fill`, `food-recipe-post`, `daily-outfit-social-post`, and `clean-voice`
+- 8 skills: `word-counter`, `readme-generator`, `android-interview`, `xiaohongshu-poem-fill`, `food-recipe-post`, `daily-outfit-social-post`, `clean-voice`, and `ai-daily-paper`
 - Local speech extraction, denoising, and natural-language trimming with `clean-voice`, including a DeepSeek Harness installer
 - Dual-platform scenario validation for `Claude Code` and `Codex`
 - Buildable install packages for both platforms
@@ -36,6 +36,7 @@ hulk-skills/
 ├── .github/workflows/
 ├── skills/
 │   ├── android-interview/
+│   ├── ai-daily-paper/
 │   ├── clean-voice/
 │   ├── daily-outfit-social-post/
 │   ├── food-recipe-post/
@@ -58,6 +59,7 @@ hulk-skills/
 - `xiaohongshu-poem-fill` - Xiaohongshu poem-fill post generation with original classical-style lines, hashtag sets, and optional local cover rendering
 - `food-recipe-post` - migrated daily recipe social post workflow for Xiaohongshu/Douyin, with baoyu-imagine cover prompts, bright handwritten cover style, and short Chinese cooking copy
 - `daily-outfit-social-post` - Xiaohongshu/Douyin OOTD post workflow with fixed creator persona, photorealistic outfit images, continuity locks, and short Chinese captions
+- `ai-daily-paper` - newspaper-style AI morning/evening video workflow for Bilibili, covering sources, evidence, editorial planning, visuals, rendering, publishing, and review; requires the external Remotion project and media referenced in the skill
 - [`clean-voice`](./skills/clean-voice/README.md) - extract speech from local audio/video or supported URLs, separate background music, reduce noise, and edit by timestamps, transcript phrases, or silence; supports Claude Code, Codex, and DeepSeek Harness
 
 ## Clean Voice Quick Start

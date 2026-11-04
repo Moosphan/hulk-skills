@@ -1,0 +1,183 @@
+# L1 证据层：第一现场与引证
+
+## 证据优先级
+
+1. 官方博客 / 公告原文
+2. 官方 X 原帖 / 产品后台截图 / GitHub commit diff
+3. 权威媒体原文（B 级）
+4. 第三方转引（仅线索，不进画面）
+
+## 证据卡五要素
+
+1. **原文引证**：带「」的原始句子，不改写
+2. **原始出处**：账号/机构 + 时间 + 链接
+3. **关键数据**：3 个以内 chips（参数/价格/日期）
+4. **为什么重要**：一句判断，不复述左边
+5. **可信度标记**：官方 / 爆料 / 转引
+
+## 截图规则
+
+- 只截正文关键段，裁掉导航、URL 栏、右侧推荐、广告
+- 推文截图必须含：作者、时间、正文
+- 页面截图用 Playwright 元素截图，不用整页
+- 拿不到截图：写「截图不可得」+ 链接，不得用网页截图冒充
+
+## 常见坑
+
+- 163 等页面标题 ≠ 原始出处；必须点进去找源头
+- 源码泄漏类：证据是 HTML 源码片段或原作者推文，不是媒体标题
+- 榜单数字：必须带榜单名 + 更新日期 + 口径
+
+## 证据素材获取（2026-11-04）
+
+### 一、文字线索（RSS / API）
+- OpenAI 官方：`https://openai.com/news/rss.xml`
+- Microsoft 官方博客：`https://blogs.microsoft.com/feed/`
+- Anthropic：无 RSS，抓 `anthropic.com/news` 列表页
+- HuggingFace Blog：`https://huggingface.co/blog/feed.xml`
+- arXiv：`http://export.arxiv.org/rss/cs.AI`
+- The Verge / TechCrunch：均有 `/rss`
+- X：RSSHub 自建 `rsshub.app/twitter/user/<id>`，或用 official API v2，或用 `platform.twitter.com/embed/Tweet.html?id=<id>` 渲染截图
+
+### 二、截图（静态证据）
+Playwright 脚本，带登录 cookie，`viewport 1400×900`，`deviceScaleFactor 2`，等 2s 再截；裁掉导航栏，只留正文。
+
+### 三、录屏（动态证据）
+同一 Playwright 上下文开 `recordVideo`，滚轮模拟浏览，得到 webm，可直接放进 Remotion `OffthreadVideo`。
+真实产品演示用 OBS 或 QuickTime 录屏。
+
+### 四、X 原帖
+优先官方 API 拿原帖 JSON；没有 key 时用 embed 页截图；再不行用 RSSHub。
+
+### 五、证据卡规则
+- 每条新闻至少 1 张可用证据，最多 3 张
+- 优先顺序：官方原文截图 > 官方 X 帖 > 产品界面 > 媒体转述
+- 403/验证码/空白页一律弃用
+
+### 截图工具（2026-11-04）
+脚本：`news-video/tools/capture-evidence.mjs`
+
+```bash
+node tools/capture-evidence.mjs <url> <out.png>
+node tools/capture-evidence.mjs <x-status-url> <out.png> --x
+HTTPS_PROXY=http://127.0.0.1:7890 node tools/capture-evidence.mjs <url> <out.png>
+```
+
+规则：
+- 自动点掉登录/订阅/注册弹窗（aria-label close、×、modal 内按钮），再按 Esc
+- 删除 `position: fixed` 悬浮层和 cookie/newsletter 条
+- 优先截 `article`/`main` 正文元素，取不到才整页
+- 输出用 `object-fit: contain` 展示，禁止裁切
+
+### X 原帖获取（有代理）
+1. **官方 API v2**：`GET /2/tweets/:id?expansions=author_id,attachments.media_keys`，Bearer Token
+2. **登录态截图**：Playwright 注入 cookies，代理走 `HTTPS_PROXY`，截 `article[data-testid="tweet"]`
+3. **免登录 embed**：`platform.twitter.com/embed/Tweet.html?id=<id>`，脚本 `--x` 模式
+4. **RSSHub 自建**：`/twitter/user/<screen_name>`，配合代理
+
+优先级：API > 登录态截图 > embed > RSSHub。
+
+### X 原帖深挖（免代理，2026-11-04 验证）
+直连 x.com 不通，但可以这样拿到原帖：
+
+1. **定位帖子 ID**：媒体文章会嵌入推文，`curl` 文章 HTML，正则 `(?:x|twitter)\.com/(user)/status/(\d+)`
+2. **取原帖内容**：`https://api.vxtwitter.com/i/status/<id>` 返回 JSON（作者、正文、时间、点赞、转推、回复）
+3. **渲染卡片**：`tools/tweet-card.mjs <status-url|id> <out.png>`
+4. 卡片含头像、蓝标、@handle、正文、时间、互动数，可直接作为证据窗口素材
+
+### 搜索帖子 ID 的入口
+- 搜索 `site:x.com <关键词>` / `<账号名> status`
+- 外媒报道（Frandroid、TechCrunch、The Verge）正文常嵌入推文
+- 官方账号：@OpenAI @AnthropicAI @thsottiaux @MistralAI @Alibaba_Qwen @DeepSeek_ai
+
+## 证据体系 2.0（2026-11-04）
+
+### 信息源分级
+**T1 一手官方**
+- 官方博客/Newsroom：OpenAI、Anthropic、Microsoft、Google、Mistral、Meta
+- 官方 changelog / release notes / version log
+- 官方文档、定价页、状态页
+- GitHub Release / commit / PR diff、HF 模型卡
+- 政府/法院/监管原文（发改委、法院公告、SEC）
+
+**T2 官方账号**
+- X：@OpenAI @AnthropicAI @MistralAI @thsottiaux @Alibaba_Qwen @DeepSeek_ai
+- 获取：媒体文章扒 status id → `api.vxtwitter.com/i/status/<id>` → 卡片渲染
+
+**T3 追踪站/社区**
+- codex-resets.com（Tibo 重置历史，含 View on X）
+- LMArena / LiveBench / OpenRouter / Artificial Analysis
+- Hacker News、Reddit 原帖
+
+**T4 权威媒体**
+- Reuters、Bloomberg、FT、WSJ、The Verge、TechCrunch、Ars Technica
+- 国内：新华社、财联社、机器之心、量子位、InfoQ
+
+### 证据形态（至少一种，优先前三种）
+1. 截图卡（原文页，裁到标题+导语）
+2. X 原帖卡（头像/蓝标/正文/时间/互动）
+3. 产品界面/演示截图
+4. 录屏片段（滚动、点击、演示）
+5. changelog/版本日志片段
+6. 代码 diff / GitHub release
+7. 图表（榜单、价格、参数对比）
+8. 音频/官方播客片段
+
+### 失败与替换
+- 403/验证码/空白/弹窗无法关闭 → 换源：官方站 > 官方 X > 追踪站 > 媒体
+- 连续 3 个源不可用，才允许标「原始出处不可得」
+- 同一事件至少准备 2 个候选源
+
+### 版式
+- 不改报纸主版式；证据以浮动窗口覆盖，宽 800，纸色边框 + 投影
+- 图片 `contain`、不留黑边、不裁切；来源条 + 「证据」角标
+- Tibo 重置页必须附 codex-resets.com 卡片或 @thsottiaux 原帖
+
+### OpenAI 访问受限（2026-11-04 实测）
+- `openai.com/news/`、`openai.com/index/*` 在本机返回 **403**（Cloudflare 区域拦截），换 UA 无效
+- `openai.com/news/rss.xml` 返回 **200**，含全部标题、日期、原文链接（无正文）
+- 处理顺序：
+  1. 有代理：`HTTPS_PROXY=... node tools/capture-evidence.mjs <url> out.png`
+  2. 无代理：用 RSS 元数据生成「OpenAI 官方 RSS」证据卡（标题 + 日期 + 原文链接），标明来源为 RSS
+  3. 需要正文时，改引权威媒体原文（Reuters/The Verge/36氪）并明确标注为转述
+- 禁止把 403 白屏截图放进成片
+
+### 代理与 OpenAI（2026-11-04 定位）
+- 根因：本机走系统代理 `127.0.0.1:7897`（Clash），Shell/Playwright 默认不走系统代理，所以 openai.com 直连 403
+- 修复：`capture-evidence.mjs` 自动读 `scutil --proxy` 的 HTTPSProxy/HTTPSPort，无需手填
+- 仍需配合：真实 UA、`waitForSelector('h1, article, main h2')`、加载后滚过 hero（OpenAI 首屏是渐变遮罩）
+- 实测：代理 + UA + 滚动后，openai.com/news 与具体文章均可截图
+- X 走同一代理后可直接访问；无代理时仍用 vxtwitter 卡片
+
+### 录屏与演示视频（2026-11-04 修正）
+- **不要**用 Playwright `recordVideo`（headless 常拍空白），也**不要**用 4fps 逐帧截图（卡顿）
+- 正确做法：CDP `Page.startScreencast` 抓帧 + `minterpolate=fps=30` 插值，输出 30fps
+- 录制前先点掉 cookie/订阅弹窗，避免横幅入镜
+- 可混入官方/非官方演示视频：直接放 `public/evidence/video/*.mp4`，`evidenceType:'video'`
+
+### 变更证据优先级
+1. GitHub Release / commit 页面**截图**
+2. 官方 changelog 页面截图
+3. 文字卡片（仅兜底，需标注版本号/日期/来源）
+
+### 录屏清晰/流畅（2026-11-04 二次修正）
+- 用 **有头浏览器**（`headless:false`）+ `recordVideo` 1080p/1280×800，直接得到 25–30fps 的真实录屏
+- 再用 ffmpeg 转 mp4（`fps=30, scale=1280:800, crf 20`），不做插值，避免拖影
+- 录制前点掉 cookie 横幅；用 `window.scrollTo` 分步滚动，速度放慢
+- 官方/非官方演示视频可直接放 `public/evidence/video/*.mp4`
+
+### 长截图可读性
+- GitHub/官网长页面：先裁到「版本号 + 前 2–3 条改动」区域，再进窗口
+- 不要整页缩进 800px 窗口，否则字太小
+- 裁剪宽高比控制在 2.2–2.4，窗口内文字才清楚
+
+### 录屏最终方案（2026-11-04 三修）
+- **无头浏览器** + CDP `Page.startScreencast`
+- 页面内用 `requestAnimationFrame` 平滑滚动 8 秒，触发持续重绘
+- 帧率可达 ~30fps（实测 470 帧 / 8 秒），按 30fps 直接编码，**不做插值**
+- 不再使用有头浏览器、不再用 4fps 截图
+
+### 截图完整性与清晰度
+- 一律**完整视口截图**（1200–1440 宽，deviceScaleFactor 2），禁止裁掉右/下内容
+- GitHub Release 类页面：滚到版本头，保证「版本号 + 日期 + Highlights 前 6 条」都在画面内
+- 窗口内展示时用 `contain`，不加裁切；清晰度靠 2x 像素密度
