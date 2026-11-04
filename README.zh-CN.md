@@ -1,5 +1,5 @@
 [![平台](https://img.shields.io/badge/Platform-Claude%20Code%20%2B%20Codex-blue)](./README.md)
-[![Skill 数量](https://img.shields.io/badge/Skills-8-green)](./README.md)
+[![Skill 数量](https://img.shields.io/badge/Skills-9-green)](./README.md)
 [![协议](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 
 # hulk-skills
@@ -12,7 +12,7 @@
 
 ## 项目亮点
 
-- 当前包含 8 个 skill：`word-counter`、`readme-generator`、`android-interview`、`xiaohongshu-poem-fill`、`food-recipe-post`、`daily-outfit-social-post`、`clean-voice` 和 `ai-daily-paper`
+- 当前包含 9 个 skill：`word-counter`、`readme-generator`、`android-interview`、`xiaohongshu-poem-fill`、`food-recipe-post`、`daily-outfit-social-post`、`clean-voice`、`ai-daily-paper` 和 `cinematic-shortfilm`
 - 新增本地人声提取、降噪和自然语言裁剪，`clean-voice` 同时提供 DeepSeek Harness 安装入口
 - 覆盖 `Claude Code` 与 `Codex` 的真实场景验证
 - 可以构建两平台的可安装 skill 包
@@ -37,6 +37,7 @@ hulk-skills/
 ├── skills/
 │   ├── android-interview/
 │   ├── ai-daily-paper/
+│   ├── cinematic-shortfilm/
 │   ├── clean-voice/
 │   ├── daily-outfit-social-post/
 │   ├── food-recipe-post/
@@ -53,6 +54,7 @@ hulk-skills/
 
 ## 当前 Skills
 
+- `cinematic-shortfilm` - 电影感科普短片制作规范，覆盖剧本旁白、Remotion/Canvas/SVG 视觉、代码配乐、混音、4K 交付、事实核对与发布包；引用外部 Remotion 工程
 - `word-counter` - 用于中英文和混排文本的确定性字数统计
 - `readme-generator` - 用于基于仓库证据生成或重构 README
 - `android-interview` - 用于结构化 Android 模拟面试、本地报告与 TTS 语音产物生成
