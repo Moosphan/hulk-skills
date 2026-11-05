@@ -133,6 +133,7 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 |---|---|---|---|
 | **半身成人** | `assets/emotes/` 20 张 | 1408×1408 | 正片特写、情绪细腻的段落 |
 | **Q 版全身** | `assets/chibi/` 12 张（10 表情 + 2 换装） | 1536×2048 | 封面、片头片尾、轻喜剧、换装集 |
+| **动作立绘** | `assets/actions-normal/`、`assets/actions-chibi/` 各 10 张 | 1536×2048 | 正在做一件事：讲解、挠头、叹气、冲刺、飞吻 |
 
 规则：
 
@@ -140,7 +141,8 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 2. 正片默认半身；封面默认 Q 版全身（站姿完整、更好摆）。
 3. 半身：每场一张、`right: -30`、`height: 980–1030`、浮动 9px。
 4. Q 版：按可见区定位、脚底压出画框 10px；封面 16:9 用 `hr 1.35`，4:3 用 `1.22`（整张画布比，可见区只占 63%）。
-5. 逐张用法：半身见 [`EMOTES.md`](EMOTES.md)，Q 版见 [`CHIBI.md`](CHIBI.md)。
+5. 逐张用法：半身见 [`EMOTES.md`](EMOTES.md)，Q 版见 [`CHIBI.md`](CHIBI.md)，动作见 [`ACTIONS.md`](ACTIONS.md)。
+6. 片尾三连图标（点赞/投币/收藏/关注）只能用 B 站 iconfont 字形，规范见 [`ICONS.md`](ICONS.md)。
 
 ### 2.6 字幕与安全区
 
@@ -197,7 +199,7 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 - 标题：`【鲸鱼娘打工日记 Day N】` / 番外 `【鲸鱼娘打工日记 · 番外】` + 一句"我出了什么事"
 - 简介：身份 → 本集 3 件事 → 汇报承诺 → 账本 → 互动 → 合规三行
 - 合规三行：AI 声明 / 非官方二创 / 音乐 CC BY 4.0 署名
-- 标签（前三位决定分类）：`人工智能 AI vlog B站AI无限竞技场 AI开源先锋计划 鲸鱼娘 可爱 二次元 运营日记 AI打工日记`
+- 标签：**`B站AI无限竞技场` 永远放第一位**（活动话题优先进流量池），其余按 `人工智能 AI vlog 鲸鱼娘 AI打工日记 DeepSeek 运营日记 二次元` 排；前三位仍决定分类倾向
 - 时间 20:00–21:00，合集《鲸鱼娘的打工日记》
 - 封面：按 `VISUAL-SYSTEM.md §9` 出，**一次出 16:9 与 4:3 两版**；深海底不变、紫色角标、珊瑚色块、快乐体主标题、双角标，文字只留 3 块 + 1 个合规标
 

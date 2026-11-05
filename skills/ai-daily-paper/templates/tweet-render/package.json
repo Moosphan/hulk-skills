@@ -1,0 +1,1 @@
+{"name":"tweet-render","private":true,"type":"module","scripts":{"build":"vite build"},"dependencies":{"react":"^18.3.1","react-dom":"^18.3.1","react-tweet":"^3.2.2"},"devDependencies":{"vite":"^5.4.0","@vitejs/plugin-react":"^4.3.1"}}

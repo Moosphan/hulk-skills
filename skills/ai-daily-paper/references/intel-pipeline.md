@@ -40,3 +40,23 @@ catbus -a main bilibili user items <uid> --limit 12
 - 漏掉 OpenAI Images 2.6（GIF 生成、速度 +50%）
 - 漏掉 Anthropic 用 Claude 解析原核 Vault 结构（3 天 → 90 分钟）
 - 两者同行当日都做了，我们没进池
+
+## 资讯源优先级（2026-11-05 定稿）
+
+按顺序找，前一级拿不到才降级：
+
+1. **官方 X 原帖**（有 status ID 就用 `tools/tweet-card.mjs` 出卡）
+2. **官方页面**（newsroom / blog / 模型页 / 定价页 / GitHub / HF）
+3. **官方演示素材**（官方页里的 `<video>`、benchmark 图、产品截图）
+4. **一手媒体正文**（机器之心、量子位、36氪、财联社、新浪科技、凤凰）
+5. 聚合站/二手转述（仅在没有以上时使用，并在画面标来源）
+
+### 找 X 帖子 ID
+- 文章 HTML 里正则 `(?:x|twitter)\.com/([A-Za-z0-9_]+)/status/(\d+)`
+- 搜索引擎 `site:x.com <关键词>` / `<账号> status`
+- 拿到 ID 后：`api.vxtwitter.com/i/status/<id>` → `tweet-card.mjs`
+- X 需登录、搜不到 ID 时，跳到第 2 级，不硬等
+
+### 找不到证据怎么办
+- 官方没有、媒体也没有 → **不进片**
+- 只有二手转述 → 标「未经官方确认」，且必须配可读截图

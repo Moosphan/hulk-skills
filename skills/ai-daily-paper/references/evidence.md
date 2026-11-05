@@ -216,3 +216,75 @@ node tools/capture-evidence.mjs <url> <out.png> --expect="SenseNova 6.8 Flash"
 - 有原帖 ID 时，一律先做 X 卡片（`tools/tweet-card.mjs`），比网页截图干净
 - 拿不到 ID（X 需登录、搜索引擎无索引）时，再用官方页或媒体正文截图
 - 卡片必须含头像、蓝标、@handle、正文、时间
+
+## 正文截图 SOP（2026-11-05 定稿）
+
+### 抓取
+1. `deviceScaleFactor: 3`，视口 1200×900
+2. `--expect="关键词1,关键词2"`：正文必须命中，否则退出码 3，不出图
+3. 选**最小、最深的正文块**（p/li/h2/h3），宽 >320、高 >80 CSS px
+4. 裁切 = 该块外接框 + 12px 内边距，宽 ≤1100 CSS px，高 ≥240 CSS px
+5. 隐藏 `aside/footer/nav/form` 与 comment/sidebar/advert/related/follow/share
+
+### 验收（人工 + 脚本）
+- 每一行中文完整，右侧不截断
+- 画面里能读到：型号/标题 + 关键数字
+- 不出现导航条、二维码、评论区、关注按钮、相关推荐
+- `python3 tools/check-evidence.py <img>` PASS（>20KB、≥600×400、非白屏）
+- 尺寸目标：宽 1800–3200px
+
+### 失败处理
+- 截图被裁断/带侧栏 → 重抓，不许将就
+- 媒体页反爬（163/搜狐常见）→ 换 36氪/财联社/新浪/凤凰/官方
+- 连续 3 个源失败 → 该条降级或剔除
+
+## X 原帖抓取（2026-11-04 已验证可用）
+直连 x.com 需要登录，**不要**用 Playwright 打开 x.com（返回空页）。可用链路：
+
+1. **拿 status ID**
+   - 媒体文章 HTML：`curl -sL <url> | grep -oE '(x|twitter)\.com/[A-Za-z0-9_]+/status/[0-9]+'`
+   - 搜索：`site:x.com <关键词>`、`<账号> status <关键词>`
+   - 官方博客/新闻稿里的嵌入推文
+- **英文科技站的推文嵌入**（techcityauthority、TNW、The Verge）HTML 里常有 `status/<ID>`，这是今天找到 OpenAI Images 2.6 原帖的路径
+2. **取原帖数据**
+   ```bash
+   curl -sL "https://api.vxtwitter.com/i/status/<ID>"
+   ```
+   返回作者、蓝标、正文、时间、点赞/转推/回复/浏览
+3. **渲染卡片**
+   ```bash
+   node tools/tweet-card.mjs "https://x.com/i/status/<ID>" out.png
+   # 或
+   scripts/x-card.sh <ID> out.png
+   ```
+   卡片规格：1040 宽、2x、头像 + 蓝标 + @handle + 正文 + 时间 + 互动数
+4. **验收**：卡片能读到发布者、正文、时间；空白/登录墙一律重来
+
+### 何时放弃 X
+- 搜不到 ID 且正文无嵌入 → 降到官方页面
+- vxtwitter 返回空 → 换官方页面，别反复试 x.com
+
+### 为什么昨天能成功
+昨天的 Anthropic / Tibo 帖子，都是**先从媒体报道 HTML 里扒出 status ID**，再走 vxtwitter，而不是直接打开 x.com。
+
+## X 卡片：改用开源 react-tweet（2026-11-05）
+自绘卡片样式不对，改用 **vercel/react-tweet**（GitHub 1.8k star，X 官方风格，带媒体/时间/互动数）。
+
+流程：
+1. `templates/tweet-render/`：Vite + React + react-tweet
+2. `npm i && npx vite build`
+3. `python3 -m http.server 4399 -d dist`
+4. Playwright 打开 `http://127.0.0.1:4399/?id=<ID>`，截 `article` 元素（3x）
+5. 本地地址要 `bypass: '127.0.0.1,localhost'`，否则代理会返回 502
+
+产出特征：头像 + 认证徽章 + @handle + 正文 + 媒体（视频/GIF 封面）+ 时间 + 点赞/回复 + Read replies。
+
+## X 帖子卡规范（2026-11-05 定稿）
+- 用开源 **vercel/react-tweet**（1.8k star）渲染，不要自绘
+- 本地工程：`templates/tweet-render/`（Vite + React），`npm i && vite build`，`python3 -m http.server 4399 -d dist`
+- Playwright 打开 `?id=<tweet-id>`，截 `article` 元素，3x
+- **必须**：`* { box-shadow: none !important }`；卡片本体 `border-radius: 0`（按钮保留圆角）
+- 截图后四边各裁 16px，去掉圆角外溢的灰边
+- 代理要 `bypass: 127.0.0.1,localhost`，否则本地服务 502
+- 卡片应包含：头像、认证徽章、@handle、正文、媒体（图/GIF 封面）、时间、点赞
+- 验收：四角无灰边、无投影、正文完整

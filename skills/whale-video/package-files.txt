@@ -3,3 +3,5 @@ VISUAL-SYSTEM.md
 examples
 CHIBI.md
 templates
+ACTIONS.md
+ICONS.md

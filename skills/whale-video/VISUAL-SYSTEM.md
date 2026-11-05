@@ -126,6 +126,8 @@ background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
 
 **Q 版全身**：`assets/chibi/`（10 表情 + 2 换装，1536×2048）——封面、片头片尾、轻喜剧用；用法见 [`CHIBI.md`](CHIBI.md)。
 
+**动作立绘**：`assets/actions-normal/`、`assets/actions-chibi/`（各 10 张，1536×2048）——"她在做一件事"，覆盖讲解/挠头/叹气/冲刺/飞吻；用法见 [`ACTIONS.md`](ACTIONS.md)。
+
 放置参数：`right: -30`、`bottom: -140`、`height: 980–1030`、浮动 9px、`drop-shadow(0 40px 70px rgba(0,0,0,.55))`；片头 15、片尾 20 固定。
 
 | 编号 | 状态 | 文件名 |
@@ -291,3 +293,13 @@ background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); 
 - 眯眼看：第一眼主标题，第二眼人物，第三眼角标。
 - 灰度对比 ≥4.5:1。
 - 数一下：文字块是否只有 3 个 + 1 个合规标。
+
+## 10. 三连图标
+
+片尾的点赞 / 投币 / 收藏 / 关注一律用 B 站 iconfont 字形（`assets/fonts/bili-icon.ttf` 导出到 `assets/icons/`），**禁用文字和手绘形状**：
+
+- 圆形描边 132×132，border 4px 品牌色
+- 图标比例：点赞 0.60 / 投币 0.62 / 关注 0.46（关注明显更小）
+- 色值：#00AEEC / #FFB800 / #FFAC38 / #FB7299
+- 完整规范见 [`ICONS.md`](ICONS.md)
+
