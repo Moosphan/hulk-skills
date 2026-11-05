@@ -81,3 +81,9 @@ node ~/self-projects/catbus/dist/cli/main.js -a main bilibili item publish \
 | `xxx.mp4` | `--video` |
 
 只交一张封面 = 未完成。
+
+## 发布前置确认（硬门禁，2026-11-05）
+- **任何情况下**，发布前必须让主人确认：成片、16:9 封面、4:3 封面、标题、简介
+- 定时任务（07:30 早报 / 19:00 晚报）只做到「待确认」：把成片和封面发出来，等主人回「发」
+- 只有主人明确回「发 / 可以发布」才允许调用 publish
+- 违规处理：立即把稿件设为 private（`item edit --video ... --visibility private`），并告知主人

@@ -181,3 +181,38 @@ HTTPS_PROXY=http://127.0.0.1:7890 node tools/capture-evidence.mjs <url> <out.png
 - 一律**完整视口截图**（1200–1440 宽，deviceScaleFactor 2），禁止裁掉右/下内容
 - GitHub Release 类页面：滚到版本头，保证「版本号 + 日期 + Highlights 前 6 条」都在画面内
 - 窗口内展示时用 `contain`，不加裁切；清晰度靠 2x 像素密度
+
+### 证据命中检查（2026-11-05 强制）
+截图不能只截首页/列表，必须命中该条新闻的关键词：
+```bash
+node tools/capture-evidence.mjs <url> <out.png> --expect="SenseNova 6.8 Flash"
+```
+- 脚本加载后检查 `body.innerText` 是否包含任一关键词；不命中直接退出码 3，不出图
+- 命中后自动滚动到含关键词的段落再截图
+- 同时写 `<out>.meta.json`：`{url, expect, ok}`
+
+检查规则：
+1. 每条资讯必须有证据图，或原文文字引用（quote 卡）
+2. 有图时，图里必须能读到该条的关键数字/型号/标题
+3. 列表页、首页、导航页截图不算证据
+4. 跑 `python3 tools/check-evidence.py <img...>`，FAIL 不许进片
+5. 图片证据缺失时，必须补 quote 卡（标注来源），不能空着
+
+### 截图规范（2026-11-05 升级）
+- 设备像素比 **3x**，最终图 ≥2400px 宽
+- 用 `--expect` 命中关键词后，只截**关键词所在段落**（宽 ≤780、高 ≤380），不截整页
+- 自动隐藏 `aside/footer/nav/form` 与 comment/sidebar/advert/related/recommend/follow/share 区块
+- 禁止把广告、评论区、关注栏、相关推荐带进画面
+- 每张证据图必须能读出：标题或型号 + 关键数字
+
+### 截图裁切（2026-11-05 再修）
+- 先按关键词选**最小、最深的正文块**（p/li/h2/h3），宽 >320、高 >80 CSS px
+- 裁切范围 = 该块外接框 + 12px 内边距，宽度不得超过 1100 CSS px
+- 高度至少 240 CSS px，避免只截到一行
+- 禁止按固定坐标裁整页；禁止把导航/侧栏/评论一起带入
+- 输出后人工看一眼：每行中文必须完整，不得右边截断
+
+### X 帖子优先
+- 有原帖 ID 时，一律先做 X 卡片（`tools/tweet-card.mjs`），比网页截图干净
+- 拿不到 ID（X 需登录、搜索引擎无索引）时，再用官方页或媒体正文截图
+- 卡片必须含头像、蓝标、@handle、正文、时间
