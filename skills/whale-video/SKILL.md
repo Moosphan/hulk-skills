@@ -143,6 +143,8 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 4. Q 版：按可见区定位、脚底压出画框 10px；封面 16:9 用 `hr 1.35`，4:3 用 `1.22`（整张画布比，可见区只占 63%）。
 5. 逐张用法：半身见 [`EMOTES.md`](EMOTES.md)，Q 版见 [`CHIBI.md`](CHIBI.md)，动作见 [`ACTIONS.md`](ACTIONS.md)。
 6. 片尾三连图标（点赞/投币/收藏/关注）只能用 B 站 iconfont 字形，规范见 [`ICONS.md`](ICONS.md)。
+7. **第三方模型角色（剧场配角）**：`assets/cast/portrait/`（半身 1536×2304）与 `assets/cast/chibi/`（全身 1024×1360）内有 Claude / ChatGPT / Grok / Qwen 四位。用于"被评估、被替代、派活、工位竞争"这类剧场互动，小紫仍是主角。用法见 [`CAST.md`](CAST.md)：一套一集、同屏最多 2 位、首次出现挂名字条、不贬低对手、不暗示官方合作。
+
 
 ### 2.6 字幕与安全区
 

@@ -85,7 +85,7 @@ def build(cfg, W, H, out, sc_override=None):
     if total>allowed:
         f=allowed/total
         widths=[int(w*f) for w in widths]
-    y=int((H*0.14 if W>=1700 else H*0.50)*S*sc); x=right-sum(widths)-gap*(len(widths)-1)
+    y=int((H*0.14 if W>=1700 else H*0.56)*S*sc); x=right-sum(widths)-gap*(len(widths)-1)
     for i,lg in enumerate(logos[:2]):
         img=Image.open(lg['path']).convert('RGBA')
         st=sticker(img,int(lg['size']*S*sc*f) if total>allowed else int(lg['size']*S*sc),outline_color=(255,255,255) if P['bg'][0]>128 else (28,22,16))

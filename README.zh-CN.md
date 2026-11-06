@@ -55,7 +55,7 @@ hulk-skills/
 
 ## 当前 Skills
 
-- `whale-video` - 鲸鱼娘《打工日记》视频制作流程，含配音规范、视觉与表情指南、20 张人物表情、12 张 Q 版素材、20 张动作立绘、B 站图标与字体、可复用单集模板和 Remotion 示例；额外音频、截图及 QA 工具需由视频工程提供
+- `whale-video` - 鲸鱼娘《打工日记》视频制作流程，含配音规范、视觉与表情指南、20 张人物表情、12 张 Q 版素材、20 张动作立绘、8 张剧场配角素材、B 站图标与字体、可复用单集模板和 Remotion 示例；额外音频、截图及 QA 工具需由视频工程提供
 - `cinematic-shortfilm` - 电影感科普短片制作规范，覆盖剧本旁白、Remotion/Canvas/SVG 视觉、代码配乐、混音、4K 交付、事实核对与发布包；引用外部 Remotion 工程
 - `word-counter` - 用于中英文和混排文本的确定性字数统计
 - `readme-generator` - 用于基于仓库证据生成或重构 README

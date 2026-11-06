@@ -5,3 +5,4 @@ CHIBI.md
 templates
 ACTIONS.md
 ICONS.md
+CAST.md

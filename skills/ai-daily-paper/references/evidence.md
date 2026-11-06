@@ -288,3 +288,27 @@ node tools/capture-evidence.mjs <url> <out.png> --expect="SenseNova 6.8 Flash"
 - 代理要 `bypass: 127.0.0.1,localhost`，否则本地服务 502
 - 卡片应包含：头像、认证徽章、@handle、正文、媒体（图/GIF 封面）、时间、点赞
 - 验收：四角无灰边、无投影、正文完整
+
+## X 卡片修复：Tweet not found（2026-11-06）
+现象：react-tweet 渲染成 “Tweet not found”，但 vxtwitter API 有数据。
+原因：浏览器直连 `cdn.syndication.twimg.com` 被墙，curl 走代理却是通的。
+做法：
+```bash
+curl -sL --proxy http://127.0.0.1:7897 "https://cdn.syndication.twimg.com/tweet-result?id=<ID>" -o /tmp/syn.json
+```
+```js
+await p.route('https://cdn.syndication.twimg.com/**', r => r.fulfill({status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'}, body: fs.readFileSync('/tmp/syn.json','utf8')}));
+// 再打开 http://127.0.0.1:4399/?id=<ID>
+```
+样式：`*{box-shadow:none!important;border-radius:0!important}`，截图后裁 16px 边。
+
+## X 卡片：一条命令（2026-11-06 定稿）
+```bash
+cd ~/dsh-video-remotion/news-video
+node ~/.dsh/skills/ai-daily-paper/templates/tweet-render/render.mjs <tweetId> /tmp/x.png
+python3 -c "from PIL import Image;im=Image.open('/tmp/x.png');w,h=im.size;im.crop((16,16,w-16,h-16)).save('/tmp/x.png')"
+```
+- 模板目录已装 `playwright@1.63.0`（必须和 news-video 版本一致，否则报找不到浏览器）
+- `render.mjs` 内置 3 次重试，出现 “Tweet not found” 会自动重试；仍失败才是网络问题
+- 代理默认 `http://127.0.0.1:7897`，可用 `HTTPS_PROXY` 覆盖
+- 实测：浏览器直连 `cdn.syndication.twimg.com` 走代理是通的，之前失败是偶发 + 版本不匹配，不是墙
