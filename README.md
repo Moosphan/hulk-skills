@@ -63,7 +63,7 @@ hulk-skills/
 - `xiaohongshu-poem-fill` - Xiaohongshu poem-fill post generation with original classical-style lines, hashtag sets, and optional local cover rendering
 - `food-recipe-post` - migrated daily recipe social post workflow for Xiaohongshu/Douyin, with baoyu-imagine cover prompts, bright handwritten cover style, and short Chinese cooking copy
 - `daily-outfit-social-post` - Xiaohongshu/Douyin OOTD post workflow with fixed creator persona, photorealistic outfit images, continuity locks, and short Chinese captions
-- `ai-daily-paper` - newspaper-style AI morning/evening video workflow for Bilibili, covering sources, evidence, editorial planning, visuals, rendering, publishing, and review, with reusable cover and tweet-card templates; requires the external Remotion project and media referenced in the skill
+- `ai-daily-paper` - newspaper-style AI morning/evening video workflow for Bilibili, covering sources, evidence, editorial planning, visuals, rendering, publishing, and review, with long-form episode guidance and reusable poster-cover and tweet-card templates; requires the external Remotion project and media referenced in the skill
 - [`clean-voice`](./skills/clean-voice/README.md) - extract speech from local audio/video or supported URLs, separate background music, reduce noise, and edit by timestamps, transcript phrases, or silence; supports Claude Code, Codex, and DeepSeek Harness
 
 ## Clean Voice Quick Start

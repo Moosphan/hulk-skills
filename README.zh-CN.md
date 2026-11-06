@@ -63,7 +63,7 @@ hulk-skills/
 - `xiaohongshu-poem-fill` - 用于生成小红书诗词填空类笔记，包含原创古风短诗、话题标签与可选本地封面渲染
 - `food-recipe-post` - 迁移后的每日菜谱社媒作品生成流程，用于小红书/抖音单菜或多菜推荐，包含 baoyu-imagine 封面提示词、明亮手写体封面风格和 500 字以内中文制作正文
 - `daily-outfit-social-post` - 用于生成小红书/抖音每日穿搭作品，包含固定博主人设、摄影级穿搭图、连续性约束和短中文标题正文
-- `ai-daily-paper` - 用于生成 B 站报纸头版风格的 AI 早报/晚报，覆盖信息源、证据链、选题口播、视觉、渲染、发布与复盘，含可复用封面与推文卡片模板；依赖技能中引用的外部 Remotion 工程与媒体素材
+- `ai-daily-paper` - 用于生成 B 站报纸头版风格的 AI 早报/晚报，覆盖信息源、证据链、选题口播、视觉、渲染、发布与复盘，含长版日报结构规范、可复用海报封面与推文卡片模板；依赖技能中引用的外部 Remotion 工程与媒体素材
 - [`clean-voice`](./skills/clean-voice/README.md) - 从本地音视频或受支持的链接提取人声、分离背景音乐、清理噪声，并按时间、转写句子或静音段剪辑；适配 Claude Code、Codex 和 DeepSeek Harness
 
 ## Clean Voice 快速开始

@@ -55,23 +55,34 @@ def build(cfg, W, H, out, sc_override=None):
     wnm=d.textlength(nm,font=ImageFont.truetype(PIN,int(fs*S),index=6))
     d.text((W*S-96*S*sc-wnm,56*S*sc),nm,font=ImageFont.truetype(PIN,int(fs*S),index=6),fill=P['ink'])
     d.ellipse((W*S-96*S*sc-wnm-20*S*sc,68*S*sc,W*S-96*S*sc-wnm-8*S*sc,80*S*sc),fill=P['accent'])
-    d.text((92*S*sc,160*S*sc),cfg['title'],font=ImageFont.truetype(SER,int(170*S*sc)),fill=P['accent'])
+    tsize=170*sc
+    while tsize>80:
+        tf=ImageFont.truetype(SER,int(tsize*S))
+        if d.textlength(cfg['title'],font=tf)/S <= W*0.58: break
+        tsize-=6
+    tf=ImageFont.truetype(SER,int(tsize*S))
+    d.text((92*S*sc,160*S*sc),cfg['title'],font=tf,fill=P['accent'])
+    title_right=(92*sc)+d.textlength(cfg['title'],font=tf)/S
     # 关键词：stroke 型号一行；block 数据点一行
     kws=cfg.get('keywords',[])
     stroke=[k for k in kws if k.get('style')!='block']
     blocks=[k for k in kws if k.get('style')=='block']
+    text_right=title_right
     if stroke:
-        chip(d,stroke[0]['text'],96*sc,395*sc,96*sc,'stroke',P)
+        text_right=max(text_right, chip(d,stroke[0]['text'],96*sc,395*sc,96*sc,'stroke',P)+96*sc)
     bx=96*sc
     for k in blocks:
         f=ImageFont.truetype(SER,int(78*S*sc)); tw=d.textlength(k['text'],font=f)/S
         y=560*sc
         d.rectangle((bx*S,y*S,(bx+tw+40*sc)*S,(y+78*sc+30*sc)*S),fill=P['accent'])
         d.text((bx*S+20*S*sc,(y+12*sc)*S),k['text'],font=f,fill=(255,255,255))
+        text_right=max(text_right, bx+tw+40*sc)
         bx+=tw+70*sc
-    d.text((98*S*sc,700*S*sc),cfg['sub'],font=ImageFont.truetype(PIN,int(32*S*sc),index=6),fill=P['sub'])
+    sf=ImageFont.truetype(PIN,int(32*S*sc),index=6)
+    d.text((98*S*sc,700*S*sc),cfg['sub'],font=sf,fill=P['sub'])
+    text_right=max(text_right,98*sc+d.textlength(cfg['sub'],font=sf)/S)
     # logos：右侧并排，右对齐；空间不够自动缩小
-    logos=cfg.get('logos',[]); gap=int(40*S*sc); right=W*S-int(60*S*sc); minx=int(W*0.47*S)
+    logos=cfg.get('logos',[]); gap=int(40*S*sc); right=W*S-int(60*S*sc); minx=int(max(text_right+48, W*0.5)*S)
     def mk(size):
         img=Image.open(logos[0 if len(sts)==0 else len(sts)]['path'] if False else '')
     sts=[]; sizes=[lg['size']*S*sc for lg in logos[:2]]
@@ -81,15 +92,19 @@ def build(cfg, W, H, out, sc_override=None):
         img=Image.open(path).convert('RGBA'); return sticker(img,int(size),outline_color=(255,255,255) if P['bg'][0]>128 else (28,22,16)).width
     widths=[canvas_w(sizes[i],logos[i]['path']) for i in range(len(sizes))]
     total=sum(widths)+gap*(len(widths)-1)
-    allowed=right-minx
-    if total>allowed:
-        f=allowed/total
-        widths=[int(w*f) for w in widths]
-    y=int((H*0.14 if W>=1700 else H*0.56)*S*sc); x=right-sum(widths)-gap*(len(widths)-1)
+    allowed=max(right-minx, 200)
+    f=min(1.0, allowed/total)
+    widths=[int(w*f) for w in widths]
+    boxes=[(92*sc,150*sc,title_right,150*sc+tsize+20),(96*sc,540*sc,text_right,700*sc)]
+    y=int((cfg.get('logoY') or (0.14 if W>=1700 else 0.56))*H*S*sc); x=right-sum(widths)-gap*(len(widths)-1)
     for i,lg in enumerate(logos[:2]):
         img=Image.open(lg['path']).convert('RGBA')
         st=sticker(img,int(lg['size']*S*sc*f) if total>allowed else int(lg['size']*S*sc),outline_color=(255,255,255) if P['bg'][0]>128 else (28,22,16))
         st=st.resize((widths[i], int(st.height*widths[i]/st.width)), Image.LANCZOS)
+        bw=widths[i]; bh=int(st.height*bw/st.width)
+        for (tx0,ty0,tx1,ty1) in boxes:
+            if not (x+S*S>=tx1*S or (x+bw)<=tx0*S or y+bh<=ty0*S or y>=ty1*S):
+                y=int(ty1*S)+int(40*S*sc)
         im.paste(st,(x,y),st); x+=widths[i]+gap
     boxes=[]
     for st in sts:

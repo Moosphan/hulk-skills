@@ -276,8 +276,15 @@ Tibo 与模型榜合并为**同一页**，不再拆两页：
 最低证据组合：1 段官方演示视频 + 1 张官方图表 + 1 张官方页面截图。
 工具：`scripts/official-model-media.mjs`。
 
-## 11. 交付包与封面（强制，2026-11-05）
-封面一律用 `templates/cover/cover.py` 生成，16:9 + 4:3 双版；规范见 [`references/cover-spec.md`](references/cover-spec.md)。早报、晚报、插播、番外同一套版式，禁止每期重排。
+## 11. 交付包与封面（强制，2026-11-06）
+
+### 长版结构（对标白鸦，2026-11-06 起）
+- 3–4 分钟；主线 4–6 条 × 35–45 秒；顶部快讯 6 条（一手链接）
+- 每条主线 ≥3 个视觉面板，载体不重复：官方正文 / System Card / benchmark 图 / HF 卡 / changelog / demo 帧 / X 卡片 / 真机截图
+- 模板已支持：`panels: string[]`（2×2 网格）与 `ticker` 场景（浅色 `NewsVideoPaper`、深色 `NewsVideoPaperPM` 均已加）
+- 简介必须含：章节时间轴 + 官方来源 URL 清单
+- 细则见 [`references/longform-structure.md`](references/longform-structure.md)
+封面一律用 `templates/cover/poster.py`（v5 海报版）生成，16:9 + 4:3 双版；规范见 [`references/cover-spec.md`](references/cover-spec.md)。早报、晚报、插播、番外同一套版式，禁止每期重排。
 每次出片，必须**一次性**交付以下四样，不等主人再要：
 1. 成片 mp4
 2. 封面 16:9（1920×1080）

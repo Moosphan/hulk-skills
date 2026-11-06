@@ -312,3 +312,16 @@ python3 -c "from PIL import Image;im=Image.open('/tmp/x.png');w,h=im.size;im.cro
 - `render.mjs` 内置 3 次重试，出现 “Tweet not found” 会自动重试；仍失败才是网络问题
 - 代理默认 `http://127.0.0.1:7897`，可用 `HTTPS_PROXY` 覆盖
 - 实测：浏览器直连 `cdn.syndication.twimg.com` 走代理是通的，之前失败是偶发 + 版本不匹配，不是墙
+
+## 证据形式清单（每条主线至少 3 种不同载体）
+1. 官方 blog 正文截图
+2. System Card / 技术报告表格（如 Table 5/6）
+3. benchmark 柱状图或表格
+4. Hugging Face 模型卡（下载量、license、部署方式）
+5. changelog / 定价页
+6. 官方 demo 视频帧（X 原帖视频、YouTube 演示）
+7. 真机/应用截图（手机、桌面端）
+8. X 原帖卡片（react-tweet 渲染，见本文开头流程）
+9. 官方架构图 / 公告配图
+
+禁止：同一张图重复出现在多个面板；纯文字段落占满 4 格。
