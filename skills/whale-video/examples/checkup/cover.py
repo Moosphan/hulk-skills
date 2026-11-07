@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 COPY = {
-    "badge": "番外", "day": "DAY 8",
+    "badge": "小紫打工日记", "day": "DAY 8",
     "line1": "体检", "line2": "挂了", "tile": "3", "after": "项",
     "sub": "最后 60 分，刚好及格",
     "note": "含 AI 生成内容 · 非官方二创",
@@ -24,7 +24,8 @@ COPY = {
 P = dict(bg1=(6, 11, 22), bg2=(10, 16, 30), beam=(16, 38, 74), halo=(92, 140, 220),
          chip=(124, 92, 224), chip_fg=(255, 250, 255),
          tile=(226, 88, 72), tile_fg=(255, 246, 242),
-         ink=(250, 247, 240), sub=(226, 231, 242), note=(206, 212, 224))
+         ink=(250, 247, 240), sub=(226, 231, 242), note=(206, 212, 224),
+         block=(226, 88, 74), blockInk=(255, 246, 240))
 
 LAYOUT = {
     "16x9": dict(W=1920, H=1080, m=96, chip=(36, 32, 68), head=190, sub=64,
@@ -43,12 +44,14 @@ def find(paths, what):
 
 PING = "/System/Library/Fonts/PingFang.ttc"
 SF = "/Library/Fonts/SF-Compact-Display-Black.otf"
+HEI_PATH = os.path.expanduser("~/.dsh/skills/whale-video/assets/fonts/AlibabaPuHuiTi-3-115-Black.ttf")
 KUA = find([
     os.path.join(ROOT, "assets", "fonts", "ZCOOLKuaiLe-Regular.ttf"),
     os.path.join(ROOT, "..", "..", "assets", "fonts", "ZCOOLKuaiLe-Regular.ttf"),
     os.path.expanduser("~/dsh-space/whale-video/assets/fonts/ZCOOLKuaiLe-Regular.ttf"),
 ], "站酷快乐体")
 EMOTE = find([
+    os.path.expanduser("~/.dsh/skills/whale-video/assets/emotes/") + COPY["emote"],
     os.path.join(ROOT, "public", "emotes", COPY["emote"]),
     os.path.join(ROOT, "assets", "emotes", COPY["emote"]),
     os.path.join(ROOT, "..", "..", "assets", "emotes", COPY["emote"]),
@@ -58,7 +61,7 @@ def FP(sz, w="semibold"):
     return ImageFont.truetype(PING, sz, index={"regular": 2, "medium": 5, "semibold": 8}[w])
 
 def FS(sz): return ImageFont.truetype(SF, sz)
-def FK(sz): return ImageFont.truetype(KUA, sz)
+def FK(sz): return ImageFont.truetype(HEI_PATH, sz)
 
 def background(W, H):
     img = Image.new("RGB", (W, H), "#060B16")
@@ -151,11 +154,37 @@ def build(ratio="16x9"):
     HF = FK(S)
     L1 = L["y_l1"]
     L2 = L1 + S * 1.30
-    d.text((m, L1), COPY["line1"], font=HF, fill=P["ink"], anchor="ls")
-    d.text((m, L2), COPY["line2"], font=HF, fill=P["ink"], anchor="ls")
-    x = m + d.textlength(COPY["line2"], font=HF) + 24 * scale
-    tw = tile(d, x, L2, COPY["tile"], HF, scale)
-    d.text((x + tw + 24 * scale, L2), COPY["after"], font=HF, fill=P["ink"], anchor="ls")
+    STROKE = {"coral": (226, 88, 74), "purple": (124, 92, 224), "pink": (255, 62, 184)}[COPY.get("stroke", "coral")]
+    SX = max(5, int(S * 0.088 * scale))
+
+    def fx_text(xy, text, fill, stroke_c, sw=SX, glow=True):
+        if glow:
+            g = Image.new("RGBA", img.size, (0, 0, 0, 0))
+            ImageDraw.Draw(g).text(xy, text, font=HF, fill=stroke_c + (255,), stroke_width=sw,
+                                   stroke_fill=stroke_c + (255,), anchor="ls")
+            g = g.filter(ImageFilter.GaussianBlur(16 * scale))
+            g.putalpha(g.split()[3].point(lambda v: int(v * 0.62)))
+            img.alpha_composite(g)
+        sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        ImageDraw.Draw(sh).text((xy[0] + 5 * scale, xy[1] + 6 * scale), text, font=HF,
+                                fill=(0, 0, 0, 130), stroke_width=sw, stroke_fill=(0, 0, 0, 130), anchor="ls")
+        img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(4 * scale)))
+        d.text(xy, text, font=HF, fill=fill, stroke_width=sw, stroke_fill=stroke_c + (255,), anchor="ls")
+
+    fx_text((m, L1), COPY["line1"], P["ink"], STROKE)
+    if COPY.get("block2"):
+        bb = HF.getbbox(COPY["line2"], anchor="ls")
+        padx, pady = 32 * scale, 14 * scale
+        d.rounded_rectangle([m + bb[0] - padx, L2 + bb[1] - pady, m + bb[2] + padx, L2 + bb[3] + pady],
+                            int(20 * scale), fill=P["block"])
+        fx_text((m, L2), COPY["line2"], P["blockInk"], (206, 70, 58), sw=max(3, int(S * 0.03 * scale)), glow=False)
+    else:
+        fx_text((m, L2), COPY["line2"], P["ink"], STROKE)
+        if COPY.get("tile") or COPY.get("after"):
+            x = m + d.textlength(COPY["line2"], font=HF) + 24 * scale + SX
+            tw = tile(d, x, L2, COPY["tile"], HF, scale) if COPY.get("tile") else 0
+            if COPY.get("after"):
+                d.text((x + tw + 24 * scale, L2), COPY["after"], font=HF, fill=P["ink"], anchor="ls")
 
     d.text((m + 8 * scale, L["y_sub"]), COPY["sub"], font=FP(L["sub"], "semibold"), fill=P["sub"])
     return img.convert("RGB")
