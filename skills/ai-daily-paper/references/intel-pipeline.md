@@ -67,3 +67,13 @@ catbus -a main bilibili user items <uid> --limit 12
 - 来源：每条主线配 2–4 个官方 URL（blog、System Card、HF、changelog），快讯 1 个一手链接
 - 国内厂商：官网 + Hugging Face 双证据；海外：官网 + X 原帖
 - 官方没有的：标「未官方」，并保留媒体原文截图
+
+## 每日三条硬规矩（2026-11-08 主人定）
+1. **同行对照必须同档期**：做早报就查同行当天早报；做晚报就查同行当晚晚报。跨档期对比不算数。
+2. **资讯查重**：近 3 天发过的条目不再重复，除非有实质更新（新数字、官方回应、结果落地），重复时必须写「更新」。
+3. **榜单与 Tibo 每次现拉**：
+   - 能力：LiveBench 2.0（`livebench.ai` 表格前三）
+   - 使用量：OpenRouter 周榜（`openrouter.ai/rankings`）
+   - 价格：OpenRouter `/api/v1/models` 取 completion 价格最低三个
+   - Tibo 重置：codex-resets.com 查最新周期与「第 N 天」
+   - 四项都必须在页脚写「采集于 MM-DD」，与视频日期一致，禁止沿用上一期数据
