@@ -77,3 +77,9 @@ catbus -a main bilibili user items <uid> --limit 12
    - 价格：OpenRouter `/api/v1/models` 取 completion 价格最低三个
    - Tibo 重置：codex-resets.com 查最新周期与「第 N 天」
    - 四项都必须在页脚写「采集于 MM-DD」，与视频日期一致，禁止沿用上一期数据
+
+## 刷新榜单必须改的两处代码（2026-11-08 事故）
+- 浅色：`src/VideoPaper.tsx` → `BoardLight`
+- 深色：`src/VideoPaperPM.tsx` → `TiboBoard`
+两处都要改数值 + `采集于 MM-DD` + `D–N`；只改一处 = 没刷新。
+交付前用 `ffmpeg -ss <榜单时间>` 抽帧目检，确认不是上一期数字。

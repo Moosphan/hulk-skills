@@ -13,7 +13,8 @@ import json, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 S=4
 SER='/System/Library/Fonts/Supplemental/Songti.ttc'; PIN='/System/Library/Fonts/PingFang.ttc'
-INK=(242,231,213); ACC=(232,145,45); RED=(178,58,46); BG=(20,16,12); SUB=(168,156,140); BLUE=(88,166,255)
+THEMES={'dark':dict(INK=(242,231,213),ACC=(232,145,45),RED=(178,58,46),BG=(20,16,12),SUB=(168,156,140),BLUE=(88,166,255),EDGE=(255,255,255)),
+        'light':dict(INK=(26,22,18),ACC=(178,58,46),RED=(178,58,46),BG=(244,238,225),SUB=(110,100,88),BLUE=(28,62,120),EDGE=(255,255,255))}
 
 def sticker(path,w,op=0.26,ol=23):
     logo=Image.open(path).convert('RGBA'); pad=int(w*0.24); h=int(logo.height*w/logo.width)
@@ -26,6 +27,9 @@ def sticker(path,w,op=0.26,ol=23):
     base=Image.new('RGBA',(W,H),(0,0,0,0)); base.alpha_composite(sd); base.alpha_composite(edge,(o2,o2)); base.alpha_composite(lg,(o2,o2)); return base
 
 def build(cfg,W,H,s,out):
+    P=THEMES.get(cfg.get('theme','dark'),THEMES['dark'])
+    global INK,ACC,RED,BG,SUB,BLUE
+    INK,ACC,RED,BG,SUB,BLUE=P['INK'],P['ACC'],P['RED'],P['BG'],P['SUB'],P['BLUE']
     im=Image.new('RGB',(W*S,H*S),BG); d=ImageDraw.Draw(im); u=lambda v:int(v*S)
     d.rectangle((0,0,u(12),H*S),fill=RED)
     d.text((u(90),u(46)),cfg['date'],font=ImageFont.truetype(SER,u(46*s)),fill=BLUE)
@@ -39,11 +43,13 @@ def build(cfg,W,H,s,out):
     t2=d.textlength(cfg['line2'],font=ImageFont.truetype(SER,u(150*s)))/S
     text_right=88+max(t1,t2,tw+30)
     so,sk=580*s,320*s
-    for _ in range(14):
+    for _ in range(18):
         o=sticker(cfg['logo_main'],int(so*S)); k=sticker(cfg['logo_second'],int(sk*S))
         gap=u(28); total=o.width+k.width+gap; ox=W*S-u(60)-total
-        if ox >= u(text_right+40): break
-        so*=0.94; sk*=0.94
+        if ox >= u(text_right+56): break
+        so*=0.92; sk*=0.92
+    else:
+        raise SystemExit(f"LOGO_TOO_CLOSE text_right={text_right:.0f} logo_x={ox/S:.0f}")
     im.paste(o,(ox,u(110)),o); im.paste(k,(ox+o.width+gap,u(110)+int(o.height*0.55)),k)
     if cfg.get('tag'):
         tf=ImageFont.truetype(SER,u(46*s)); tag=cfg['tag']; tw2=d.textlength(tag,font=tf)/S
@@ -54,5 +60,5 @@ def build(cfg,W,H,s,out):
 
 if __name__=='__main__':
     c=json.load(open(sys.argv[1])); out=c.get('out','/tmp/poster')
-    build(c,1920,1080,1.0,f'{out}-169.jpg'); build(c,1440,1080,0.85,f'{out}-43.jpg')
+    build(c,1920,1080,1.0,f'{out}-169.jpg'); build(c,1440,1080,0.95,f'{out}-43.jpg')
     print('ok',f'{out}-169.jpg',f'{out}-43.jpg')
