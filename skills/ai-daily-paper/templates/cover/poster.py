@@ -14,7 +14,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 S=4
 SER='/System/Library/Fonts/Supplemental/Songti.ttc'; PIN='/System/Library/Fonts/PingFang.ttc'
 THEMES={'dark':dict(INK=(242,231,213),ACC=(232,145,45),RED=(178,58,46),BG=(20,16,12),SUB=(168,156,140),BLUE=(88,166,255),EDGE=(255,255,255)),
-        'light':dict(INK=(26,22,18),ACC=(178,58,46),RED=(178,58,46),BG=(244,238,225),SUB=(110,100,88),BLUE=(28,62,120),EDGE=(255,255,255))}
+        'light':dict(INK=(26,22,18),ACC=(178,58,46),RED=(178,58,46),BG=(244,238,225),SUB=(110,100,88),BLUE=(28,62,120),EDGE=(255,255,255)),
+        'purple_light':dict(INK=(34,24,51),ACC=(107,63,160),RED=(107,63,160),BG=(245,240,250),SUB=(120,108,138),BLUE=(74,44,120),EDGE=(255,255,255)),
+        'purple_dark':dict(INK=(239,231,250),ACC=(192,148,255),RED=(154,92,214),BG=(23,13,36),SUB=(168,150,190),BLUE=(178,150,255),EDGE=(255,255,255))}
 
 def sticker(path,w,op=0.26,ol=23):
     logo=Image.open(path).convert('RGBA'); pad=int(w*0.24); h=int(logo.height*w/logo.width)
@@ -26,7 +28,7 @@ def sticker(path,w,op=0.26,ol=23):
     sd=Image.new('RGBA',(W,H),(0,0,0,0)); sd.paste(sh,(o2+int(w*0.03),o2+int(w*0.035)),sh); sd=sd.filter(ImageFilter.GaussianBlur(int(w*0.035)))
     base=Image.new('RGBA',(W,H),(0,0,0,0)); base.alpha_composite(sd); base.alpha_composite(edge,(o2,o2)); base.alpha_composite(lg,(o2,o2)); return base
 
-def build(cfg,W,H,s,out):
+def build(cfg,W,H,s,out,sc43=0.95):
     P=THEMES.get(cfg.get('theme','dark'),THEMES['dark'])
     global INK,ACC,RED,BG,SUB,BLUE
     INK,ACC,RED,BG,SUB,BLUE=P['INK'],P['ACC'],P['RED'],P['BG'],P['SUB'],P['BLUE']
@@ -42,7 +44,15 @@ def build(cfg,W,H,s,out):
     t1=d.textlength(cfg['line1'],font=ImageFont.truetype(SER,u(210*s)))/S
     t2=d.textlength(cfg['line2'],font=ImageFont.truetype(SER,u(150*s)))/S
     text_right=88+max(t1,t2,tw+30)
-    so,sk=580*s,320*s
+    so,sk=580*s*cfg.get('logoScale',1.0),320*s*cfg.get('logoScale',1.0)
+    if W < 1700:
+        o=sticker(cfg['logo_main'],int(300*S*sc43))
+        k=sticker(cfg['logo_second'],int(190*S*sc43))
+        ox=W*S-u(40)-max(o.width,k.width)
+        oy=u(170)
+        im.paste(o,(W*S-u(40)-o.width,oy),o)
+        im.paste(k,(W*S-u(40)-k.width,oy+o.height+u(10)),k)
+        im.resize((W,H),Image.LANCZOS).save(out,quality=95); return
     for _ in range(18):
         o=sticker(cfg['logo_main'],int(so*S)); k=sticker(cfg['logo_second'],int(sk*S))
         gap=u(28); total=o.width+k.width+gap; ox=W*S-u(60)-total

@@ -83,3 +83,11 @@ catbus -a main bilibili user items <uid> --limit 12
 - 深色：`src/VideoPaperPM.tsx` → `TiboBoard`
 两处都要改数值 + `采集于 MM-DD` + `D–N`；只改一处 = 没刷新。
 交付前用 `ffmpeg -ss <榜单时间>` 抽帧目检，确认不是上一期数字。
+
+## Tibo 重置的正确读法（2026-11-10 纠正）
+- 每次现查两个站：`codex-resets.com`（公告历史）+ `limitdigest.com/resets/codex/`（下次排期）
+- **必须区分两种重置**：
+  - `full reset`：官方「usage limits have been reset」，额度直接刷新
+  - `banked reset`：发一张存量重置券，要在 Codex App 里手动领、有有效期，**不等于额度刷新**
+- 不许再用「28 天周期推算」这个说法，节奏已不稳定；只写「最近一次 full reset 日期 + 下次是否已排期」
+- **人事变更**：Tibo（@thsottiaux）2026-11-06 已转岗负责 OpenAI 内部安全，重置按钮可能移交 Andrew Ambrosino（未官宣），口播不要再写「Tibo 的 28 天周期」
