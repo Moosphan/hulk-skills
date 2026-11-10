@@ -1,0 +1,27 @@
+{
+  "name": "紫鸦zya · 清冷可爱少女（克隆版 P）",
+  "engine": "qwen3-tts-clone",
+  "model": "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-bf16",
+  "runtime": "~/dsh-space/whale-video/.venv-tts/bin/python",
+  "script": "~/.dsh/skills/ai-daily-paper/templates/tts/zya_tts.py",
+  "lang_code": "zh",
+  "reference": {
+    "audio": "~/.dsh/skills/ai-daily-paper/voices/zya-ref-P.wav",
+    "text_file": "~/.dsh/skills/ai-daily-paper/voices/zya-ref-P.txt",
+    "origin": "VoiceDesign 一次性生成的 11 秒样音，作为唯一音色锚点；日常合成只用这份参考音"
+  },
+  "voice_design": {
+    "note": "只在要换音色时跑一次，产出新参考音；日常不要用 VoiceDesign 逐句生成，会音色漂移",
+    "model": "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-bf16",
+    "instruct": "A clear, cute young anime girl voice, 17, bright timbre, composed and professional, no attitude, efficient phrasing, clean cut sentence endings, soft close-mic, Mandarin Chinese.",
+    "sampling": { "speed": 1.12, "temperature": 0.7, "top_p": 0.9, "repetition_penalty": 1.05 },
+    "seed": 11
+  },
+  "sampling": { "temperature": 0.7, "top_p": 0.9, "repetition_penalty": 1.05 },
+  "seed": { "am": 11, "pm": 11 },
+  "post": "aresample=48000,loudnorm=I=-16:TP=-1.5",
+  "assembly": "每句 silenceremove -50dB -> 15ms 淡入 / 40ms 淡出；句间 0.15s，场景间 0.30s，片尾留 1.0s；终混 loudnorm I=-15",
+  "quality_gate": "每句 ffprobe 时长，>30s 或 <0.6s 视为退化，换 seed 重生成；整片再做一次 ASR 抽检数字与人名",
+  "reference_sample": "voices/zya-P-reference.m4a",
+  "locked_at": "2026-11-10"
+}

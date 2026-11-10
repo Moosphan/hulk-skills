@@ -55,7 +55,7 @@ hulk-skills/
 
 ## Skills
 
-- `whale-video` - Whale Girl work-diary video workflow with narration, visual and emote guides, 20 character emotes, 12 chibi assets, 20 action poses, 8 supporting-character assets, Bilibili icons and fonts, reusable episode templates, and a Remotion example; additional audio, screenshots, and QA tools must be supplied by the video project
+- `whale-video` - Whale Girl work-diary video workflow with narration, visual and emote guides, 20 character emotes, 12 chibi assets, 20 action poses, 8 supporting-character assets, Bilibili icons and fonts, reusable episode templates, a column library with Bilibili ranking guidance, and a Remotion example; additional audio, screenshots, and QA tools must be supplied by the video project
 - `cinematic-shortfilm` - cinematic science short-film workflow covering scripts, narration, Remotion/Canvas/SVG visuals, synthesized music, mixing, 4K delivery, fact-checking, and publishing assets; references external Remotion projects
 - `word-counter` - deterministic Chinese / English / mixed text counting
 - `readme-generator` - evidence-first README generation and refactoring
@@ -63,7 +63,7 @@ hulk-skills/
 - `xiaohongshu-poem-fill` - Xiaohongshu poem-fill post generation with original classical-style lines, hashtag sets, and optional local cover rendering
 - `food-recipe-post` - migrated daily recipe social post workflow for Xiaohongshu/Douyin, with baoyu-imagine cover prompts, bright handwritten cover style, and short Chinese cooking copy
 - `daily-outfit-social-post` - Xiaohongshu/Douyin OOTD post workflow with fixed creator persona, photorealistic outfit images, continuity locks, and short Chinese captions
-- `ai-daily-paper` - newspaper-style AI morning/evening video workflow for Bilibili, covering sources, evidence, editorial planning, visuals, rendering, publishing, and review, with long-form episode guidance and reusable poster-cover and tweet-card templates; requires the external Remotion project and media referenced in the skill
+- `ai-daily-paper` - newspaper-style AI morning/evening video workflow for Bilibili, covering sources, evidence, editorial planning, visuals, rendering, publishing, and review, with long-form episode guidance, reusable poster-cover and tweet-card templates, and a Qwen3-TTS voice-cloning script with reference audio; requires the referenced external Remotion project, media, and TTS runtime, with the TTS script and configuration using the original `~/.dsh/skills/ai-daily-paper` paths
 - [`clean-voice`](./skills/clean-voice/README.md) - extract speech from local audio/video or supported URLs, separate background music, reduce noise, and edit by timestamps, transcript phrases, or silence; supports Claude Code, Codex, and DeepSeek Harness
 
 ## Clean Voice Quick Start

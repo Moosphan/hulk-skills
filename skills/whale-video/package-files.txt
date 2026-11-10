@@ -6,3 +6,5 @@ templates
 ACTIONS.md
 ICONS.md
 CAST.md
+COLUMNS.md
+columns

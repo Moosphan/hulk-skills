@@ -326,3 +326,58 @@ Tibo 与模型榜合并为**同一页**，不再拆两页：
 截图：3x DPI、关键词命中后裁最小正文块、宽 ≤1100/高 ≥240 CSS px、不得带侧栏评论、中文不许截断。
 见 [`references/intel-pipeline.md`](references/intel-pipeline.md)：采集 → **同业对照（白鸦/黑鸦当日更新）** → 补池 → 选题 → 确认 → 制作。
 未做同业对照不得进入写稿。
+
+
+## 发布归档（2026-11-10 主人定，强制）
+每期成品发布后，必须归到一个按日期排的目录，禁止散落在仓库根目录：
+
+```
+deliveries/YYYY-MM-DD/
+  am/  AI早报-YYYY-MM-DD.mp4
+       AI早报-YYYY-MM-DD-封面16x9.jpg
+       AI早报-YYYY-MM-DD-封面4x3.jpg
+       desc.txt            # 投稿简介原文
+       edition.json        # 当天 edition
+       evidence/           # 用到的证据图（只放本期用到的）
+  pm/  AI晚报-YYYY-MM-DD.mp4 + 双封面 + desc.txt + edition-pm.json + evidence/
+  publish.md               # 平台、BV号、链接、标题、标签、发布时间、状态
+```
+
+规则：
+1. 发布成功后立刻归档，`publish.md` 回填 BV 号与链接；
+2. 素材（音乐、模板、字体）不进归档目录，只放成品与证据；
+3. 归档路径写进当日总结，方便回查；
+4. 小红书笔记 ID 同样记进 `publish.md`。
+5. 归档根目录固定为仓库的 `deliveries/`，不要再往根目录堆成品。
+
+
+## 配音（紫鸦zya，2026-11-10 定稿 · 克隆模式）
+- 配置：`voices/zya-voice.json`；参考音：`voices/zya-ref-P.wav` + `voices/zya-ref-P.txt`；样张：`voices/zya-P-reference.m4a`
+- 生成器：`templates/tts/zya_tts.py`（一行命令出全套 wav）
+- **为什么用克隆而不是 VoiceDesign**：VoiceDesign 是「按描述造声音」，逐句独立生成会音色漂移；必须先生成一条参考音，再用 Base 模型逐句克隆。
+- 日常合成（唯一正确用法）：
+```bash
+~/dsh-space/whale-video/.venv-tts/bin/python \
+  ~/.dsh/skills/ai-daily-paper/templates/tts/zya_tts.py lines.json assets/vo
+```
+  `lines.json` 结构：`{"scenes":[{"id":"open","lines":["..."]}, ...]}`
+- 克隆参数：模型 `Qwen3-TTS-12Hz-1.7B-Base-bf16`、`ref_audio` + `ref_text`、`temperature 0.7 / top_p 0.9 / repetition_penalty 1.05`、**seed 11**、lang `zh`
+- 换音色（极少用）：用 VoiceDesign 跑一次，描述 `A clear, cute young anime girl voice, 17, bright timbre, composed and professional, no attitude, efficient phrasing, clean cut sentence endings, soft close-mic, Mandarin Chinese.` + `speed 1.12`，把结果存成新的 `zya-ref-P.wav/.txt`
+- 后处理：`aresample=48000,loudnorm=I=-16:TP=-1.5`；拼装 15ms 淡入 / 40ms 淡出，句间 0.15s，场景间 0.30s，片尾 ≥1.0s，终混 `loudnorm I=-15`
+- 质量门：每句 `ffprobe` 验时长，>30s 或 <0.6s 视为退化，换 seed 重生成；整片 ASR 抽检数字与人名
+- 禁止再用 Edge TTS（旧 Xiaoyi 参数仅作历史备份）
+
+
+## B站话题标签（2026-11-10 强制）
+每期早晚报**必带三个固定标签**，缺一不可：
+1. `人工智能`
+2. `AI日报`
+3. `AI IN ALL！`（B站官方活动话题，tag_id 67376097；必须带，是主要流量入口）
+
+再加 **3 个当天关键词**（公司 / 模型 / 垂类，如 Claude、英伟达、开源），总数 6–8 个，不超过 10。
+标签顺序无所谓，但 `AI IN ALL！` 必须出现在列表里。发布命令示例：
+```bash
+catbus -a main bilibili item publish --video ... --tag 人工智能 --tag AI日报 --tag "AI IN ALL！" \
+  --tag Claude --tag Anthropic --tag 开源
+```
+同行数据（16 条抽样）：`AI IN ALL！` 12 次、`人工智能` 10 次、`AI日报` 4 次——三个是我们的必带组合。

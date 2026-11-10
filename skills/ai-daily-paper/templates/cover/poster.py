@@ -47,14 +47,14 @@ def build(cfg,W,H,s,out,sc43=0.95):
     so,sk=580*s*cfg.get('logoScale',1.0),320*s*cfg.get('logoScale',1.0)
     if W < 1700:
         o=sticker(cfg['logo_main'],int(300*S*sc43))
-        k=sticker(cfg['logo_second'],int(190*S*sc43))
+        k=sticker(cfg['logo_second'],int(190*S*sc43)) if cfg.get('logo_second') else Image.new('RGBA',(1,1))
         ox=W*S-u(40)-max(o.width,k.width)
         oy=u(170)
         im.paste(o,(W*S-u(40)-o.width,oy),o)
         im.paste(k,(W*S-u(40)-k.width,oy+o.height+u(10)),k)
         im.resize((W,H),Image.LANCZOS).save(out,quality=95); return
     for _ in range(18):
-        o=sticker(cfg['logo_main'],int(so*S)); k=sticker(cfg['logo_second'],int(sk*S))
+        o=sticker(cfg['logo_main'],int(so*S)); k=sticker(cfg['logo_second'],int(sk*S)) if cfg.get('logo_second') else Image.new('RGBA',(1,1))
         gap=u(28); total=o.width+k.width+gap; ox=W*S-u(60)-total
         if ox >= u(text_right+56): break
         so*=0.92; sk*=0.92
