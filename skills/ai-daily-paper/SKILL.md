@@ -381,3 +381,144 @@ catbus -a main bilibili item publish --video ... --tag 人工智能 --tag AI日�
   --tag Claude --tag Anthropic --tag 开源
 ```
 同行数据（16 条抽样）：`AI IN ALL！` 12 次、`人工智能` 10 次、`AI日报` 4 次——三个是我们的必带组合。
+
+
+
+
+## 正式模板：P0 版式（2026-11-11 起全量启用）
+组件：`news-video/src/NewsVideoP0.tsx`
+- 早报：composition `NewsVideoP0`（`theme: light`）
+- 晚报：composition `NewsVideoP0PM`（`theme: dark`）
+- 深浅两套色值在组件内 `LIGHT` / `DARK`：
+  - light：底 #FFFFFF / 主字 #221833 / 强调 #6B3FA0 / 卡片 #F7F4FC / 线 #EDE6F6
+  - dark：底 #170D24 / 主字 #EFE7FA / 强调 #C094FF / 卡片 #22162F / 线 #33243F
+
+### edition 需要的新字段
+```json
+{ "id": "s1", "company": "Google", "title": "Carbon 正式开放",
+  "rows": [{"label":"发布范围","value":"开发者 / 企业 / 科研"},{"label":"定位","value":"长任务 · 多步推理"}],
+  "conclusion": "不是聊天模型，是干活模型",
+  "video": "evidence/xxx.mp4",      // 有视频证据时用它，替代 rows 版式
+  "sources": ["blog.google"] }
+```
+
+### 版式规则
+1. **开场**：日期 + 「今日 N 条主线」+ 四条清单（序号/公司/标题），右栏欢迎立绘
+2. **数据页**：左侧行卡（label + 可选 note + 右对齐 value，>12 字符自动降字号），底部结论大字 50px，位于 790px，来源行 880px
+3. **视频页**：视频卡 1130×600（top 250），下方来源
+4. **快讯页**：3 条列表 + 左下三个官方 logo（120px，优先 thesvg）*，无官方标的用中性字标
+5. **榜单页**：重置四项（最近重置/上次全局/下次排期/按钮）+ 三列纵向、每列 5 行、总宽 1460、列间 64
+6. **右栏**：logo(104) → 章节 3 条(19px 居中) → 立绘(268, 贴底)，全部水平居中，与正文 ≥80px
+
+6b. **底部分段进度条**（2026-11-11 定稿）：
+   - 按每个 scene 的真实时长切成不等宽段（`flex: 0 0 (frames/total)*100%`），段间 8px
+   - 段高 10px、两端 `border-radius: 999px`
+   - 已播段实心紫（#6B3FA0），当前段紫渐变（#6B3FA0→#B07BE0），未播段淡灰（卡片色）
+   - 段下 10px 处标章节名：开场 / 公司名 / 快讯 / 榜单 / 尾声，字号 14，当前段加粗并用强调色
+   - 左右各留 56px，与页眉对齐
+7. **动效**：logo 缩放+旋转、章节错峰 8 帧、立绘上浮 30px、数据卡每行错峰 8 帧、结论 40–58 帧、快讯/榜单错峰滑入
+
+### 强制检查
+- **榜单数据一变，必须重录 s7 口播**（2026-11-11 事故：画面 53.8T，配音还念 55.4T）
+- 快讯 logo 必须官方源（thesvg > 官网 > iconfont），禁止自造字标代替厂商
+- 榜单每期现拉 LiveBench top5 / OpenRouter top5 / 官方定价最低 5 个
+
+
+
+
+## 栏目模板体系（2026-11-11 定稿）
+把「日报」和「产品雷达」拆成两种可复用的模板类型，新栏目只登记不改渲染器。
+
+### 注册表
+`news-video/src/columns.json` + `news-video/src/columns.ts`（类型定义、`getColumn()`）
+```json
+{
+  "product-radar": {
+    "id": "product-radar", "brand": "产品雷达",
+    "template": "radar", "theme": "light",
+    "composition": "NewsVideoRadar",
+    "editionPath": "public/edition-radar.json",
+    "audioPath": "public/narration-radar.wav",
+    "coverTheme": "purple_light",
+    "targetSeconds": [60, 120],
+    "archiveDir": "radar"
+  }
+}
+```
+当前三档：`daily-am`（AI 早报/浅色）、`daily-pm`（AI 晚报/深色）、`product-radar`（产品雷达/浅色）。
+
+### 模板类型 A：daily（多条目日报）
+- 结构：开场清单（N 条主线）→ 每条主线一屏 → 快讯 → 榜单 → 片尾
+- 时长：90–130 秒；单条主线 12–20 秒
+- 版式：数据行卡（label/value）+ 一句话结论 + 右侧栏（logo / 章节 / 立绘）+ 分段进度条
+- 证据：官方优先；X 官方卡 > 官方演示视频 > 官方页面；三方媒体只在页面干净时用
+- 必含：Codex 重置状态 + 能力/使用量/价格三列榜单（现拉 top5）
+
+### 模板类型 B：radar（单条目深挖）
+- 结构：仓库/官方证据 → N 个功能点（每个一屏）→ 判断（值得升/观望/别用生产）→ 片尾
+- 时长：60–120 秒；每个功能点 10–18 秒
+- 每个功能点必须三件套：**操作界面演示（带光标点击动画）** + 一句结论 + 底部字幕
+- 演示优先级：窗口/界面演示 > 终端实录 > 静态示意图；终端里的路径必须换成假信息
+- 文案规则：不念 changelog，写「我试了什么 + 数据」；没跑通的要明说；结尾给判断
+- 素材来源：`tools/release-watch.py`（16 个开源项目 + 8 个官方博客 RSS）
+
+### 画面组件（NewsVideoP0.tsx 内，两种模板共用）
+| 字段 | 组件 | 说明 |
+|---|---|---|
+| `rows` + `conclusion` | Story | 数据行 + 一句话结论 |
+| `evidence` | 图片卡 | contain 显示，禁止截断 |
+| `video` | VideoStory | 视频证据，1130×600 |
+| `diagram` | Diagram | 树形 / 流程 / 对比 / 时间轴 / 层叠 |
+| `mock` | Mock | 界面演示 + 光标动画 + 点击涟漪 + tab 切换 |
+| `terminal` | Terminal | 终端实录（逐字打字 + 输出淡入），路径必须脱敏 |
+| `caption` | Caption | 底部字幕条，≤22 字 |
+| `chapters` / `short` | Rail / 开场清单 | 右栏章节、清单短名 |
+
+### 新增一个栏目（4 步）
+```bash
+python3 tools/new-column.py --id ai-paper --brand "论文雷达" \
+  --template radar --theme light --composition NewsVideoRadar --archive paper
+```
+1. 生成 `edition-<id>.json` 骨架 + 登记 columns.json
+2. 写稿 → `assets/vo/*.wav`（zya_tts.py）→ 拼 `public/narration-<id>.wav`，回填 startFrame/frames
+3. `npx remotion render <composition> out/<id>.mp4`
+4. 封面 poster.py（theme 跟 columns.json）+ 归档 `deliveries/<date>/<archiveDir>/`
+
+### 强制检查
+- 榜单数据一变 → 必须重录 s7 口播
+- 演示数据不许和同行撞场景（每次换行业例子）
+- 终端/界面里的本机路径、仓库名、提交号一律替换为假信息
+
+
+## 证据来源铁律（2026-11-12 修订）
+- **禁止**使用第三方平台截图：IT之家、金十、搜狐、网易、头条、东方财富、品玩、财联社等一律不用
+- **只用**：X 原帖（原生卡片：头像 + 认证 + 正文 + 配图 + 时间 + 点赞）、官方博客/新闻稿、官方公告、法院文书、官方演示视频、官方行情页
+- X 原帖用「X 卡片组件」渲染（`xpost` 字段：name/handle/avatar/verified/text/media/date/likes），数据从 `--raw x item get` 取，头像与配图下载到 `public/evidence/`
+- 三方媒体只作**线索**，不出现画面；找不到原始出处时，画面用数据卡 + 「原始出处待补」标注，并在发布说明里写清
+- 每条主线 ≥2 个证据，快讯 ≥1 个；单张证据停留 ≤20 秒
+
+
+## 版式与音频硬性要求（2026-11-12 追加，全部踩过坑）
+1. **顶部报纸分版条必须随场景切换**：每个 scene 带 `section` 字段，`SectionNav` 用 `activeName={cur.section}` 高亮；不许固定高亮「概览」。
+2. **分版条与右上角状态文字的间距**：分版条 `top: 92`，右上 meta 保持 `top: 40`；正文标题下移到 `top: 142`，媒体区 `top: 330`，右栏（logo/章节/立绘）`top: 150`。任何元素不得压在分版条上。
+3. **底部分段进度条切换段落必须有键盘音**：用 ffmpeg 后期混音（`brand/audio-stings-v2/sources/click-soft.wav`，`volume=0.5,volume=8dB`，`alimiter=limit=0.95`），按每个 scene 的 `startFrame/60` 插入；**不要**放在 Remotion 里（之前放过，听不见）。
+   验收：`ffmpeg -ss <边界+0.1> -t 0.5 -af volumedetect` 的 max_volume 应比相邻非边界段高 4–6 dB。
+4. **X 原帖卡片**：用 `templates/tweet-render`（react-tweet）。启动顺序不能错——
+   ```bash
+   cd ~/.dsh/skills/ai-daily-paper/templates/tweet-render
+   npx vite build
+   lsof -ti:4399 | xargs -r kill        # 必须杀掉旧 http.server，否则返回目录列表
+   python3 -m http.server 4399 -d "$PWD/dist" &
+   cd ~/dsh-video-remotion/news-video && node ~/.dsh/skills/ai-daily-paper/templates/tweet-render/render.mjs <tweetId> <out.png>
+   ```
+   卡片竖版时用「左卡片 + 右数据行」两栏，不要整卡缩进 1130 宽。
+5. **证据来源**：只用 X 原帖 / 官方稿 / 官方视频；IT之家、金十、搜狐、东方财富等三方截图禁止入画（只作线索）。
+
+6. **分区必须连续**：scene 顺序按分区聚合（概览 → 新模型 → 芯片 → 厂商 → 行业动态），分版条顺序 = 分区首次出现顺序，不许来回跳。
+7. **开场/片尾不放分版条**，或标题下移到 `top: 142` 以下，任何文字不得压到分版条（`top: 92`，高 40）。
+8. **每条资讯都要有证据**：主线 2 个、快讯至少 1 个；X 卡片优先；确实没有的才用数据卡，并在片尾统一标注「部分条目原始出处待补」。
+
+9. **口播里禁止固定编号**（「快讯一/八」）：场景顺序会因分区调整而变，编号必错。开头用「接下来／再看一条／芯片这边」这类不依赖位置的过渡词。
+10. **右上角计数按内容场景算**：`本期 N 条 · 正在讲第 i 条`，N 与 i 都取「不含开场/片尾」的顺序，不许用主线数量（会显示第 0 条）。
+
+11. **标题固定前缀（2026-11-13 主人定）**：早报标题格式 `AI 早报｜<最有搜索价值的两个点，逗号分隔>`；晚报 `AI 晚报｜<同样格式>`。产品雷达 `产品雷达｜<项目名 + 版本>`、GitHub 开源 `GitHub 开源｜<项目名>`。前缀不计入 80 字限制的判断，但整条标题不超过 80 字。

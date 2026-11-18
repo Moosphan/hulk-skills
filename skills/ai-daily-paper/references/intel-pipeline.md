@@ -94,7 +94,7 @@ catbus -a main bilibili user items <uid> --limit 12
 
 ## 资讯源巡检清单（2026-11-10 补，P0 强制）
 每天三次（09:00 / 14:00 / 18:00）扫以下源，只取 24h 内：
-- **X 一手**：@elonmusk、@sama、@AnthropicAI、@OpenAI、@GoogleDeepMind、@MetaAI、@deepseek_ai、@Alibaba_Qwen、@Zai_org、@MiniMax_AI、@MoonshotAI、@ThinkingMachines
+- **X 一手（测评首选）**：@itsPaulAi、@scaling01、@ArtificialAnlys、@lmarena_ai、@elonmusk、@sama、@AnthropicAI、@OpenAI、@GoogleDeepMind、@MetaAI、@deepseek_ai、@Alibaba_Qwen、@Zai_org、@MiniMax_AI、@MoonshotAI、@ThinkingMachines
 - **海外媒体**：The Verge AI、TechCrunch AI、Reuters Tech、Bloomberg Tech
 - **模型库**：HuggingFace Trending top10
 - **社区**：Linux.do、r/LocalLLaMA、HN 前 20

@@ -22,12 +22,35 @@ description: 鲸鱼娘《打工日记》系列短视频的完整制作工作流�
 11. **Day 数取最新一集**：HUD、台词、标题、发布包四处必须一致，改一次全改。
 12. 发布必须带：AI 声明 + CC BY 音乐署名 + 非官方二创。
 
-## 1. 配音（冻结，不再改）
+## 1. 配音（默认：Qwen 克隆音色；备选：Edge 小伊）
 
-**小紫的声音 = Edge TTS `zh-CN-XiaoyiNeural`（小伊 · 甜元气）**
+> 2026-11-17 主人定：**默认音色换成 Qwen 克隆的「D1-soft」**，Edge 小伊保留为备选 A。
+> 一期只用一种音色；换音色必须先出 15 秒试听给主人确认。
+
+### 1.1 默认 · Qwen3-TTS 克隆音色「D1-soft」
+
+- 模型：`mlx-community/Qwen3-TTS-12Hz-1.7B-Base-bf16`（mlx-audio，Apple Silicon）
+- 参考音：`assets/xiaozi-voices/qwen-d1-soft.wav`（约 17 秒）
+- 参考文（**必须逐字一致**，少一个字都会跑调）：
+  `你好呀，我是小紫。今天也想和你分享一点新鲜事。别看我个子小，想法可不少。要是讲得还不错，就给我点个赞吧。你的喜欢，我可是会认真记住的。`
+- 采样：`temperature=0.7`、`top_p=0.9`、`repetition_penalty=1.05`、`lang_code="Chinese"`
+- 后处理（与旧版一致）：
+  `highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor=threshold=-18dB:ratio=2:attack=8:release=180,loudnorm=I=-16:TP=-1.5:LRA=9,aresample=48000`
+
+```bash
+# 逐句生成（venv 里要有 mlx-audio）
+~/dsh-space/whale-video/.venv-tts/bin/python tools/qwen_clone_tts.py "本紫也想双十一。" /tmp/line.wav
+```
+
+- 脚本：`tools/qwen_clone_tts.py`（`text` / 输出 wav / 第三个参数给 `ref` 时使用参考文）
+- 生成是**非确定性的**：同一句多跑几次，挑最像的；一次一集，别混用不同批次。
+- 对话里另一个人（主人/招聘方等）换一个音色：克隆另一段参考音，或临时用 Edge 男声（`zh-CN-YunjianNeural`），并在简介里注明“双角色配音”。
+
+### 1.2 备选 A · Edge TTS 小伊（旧默认，仍可用）
+
+**小紫 = Edge TTS `zh-CN-XiaoyiNeural`（小伊 · 甜元气）**
 
 - rate `-2%`，pitch `+8Hz`
-- 后处理：`highshelf=f=6000:g=1.5` → `deesser=i=0.4` → `acompressor=threshold=-18dB:ratio=2` → `loudnorm=I=-16:TP=-1.5:LRA=9` → 48kHz
 - 参考样音：`assets/xiaozi-voices/小紫试音-B-甜元气.mp3`
 - 参数记录：`xiaozi-voice.json`（项目根）、`voice_preset_xiaozi.json`（本目录）
 
@@ -37,7 +60,7 @@ edge-tts --voice zh-CN-XiaoyiNeural --text "$(cat /tmp/text.txt)" \
 ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor=threshold=-18dB:ratio=2:attack=8:release=180,loudnorm=I=-16:TP=-1.5:LRA=9,aresample=48000" -ac 2 -b:a 192k out.mp3
 ```
 
-**冻结规则**：这是用户确认的最终音色，后续任何一集直接使用，不换引擎、不私自改 rate/pitch/后处理。
+**规则**：选定之后整集统一，不混音色、不私自改采样参数。
 
 ## 2. 视觉系统
 
@@ -205,6 +228,21 @@ ffmpeg -y -i /tmp/line.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor
 - 时间 20:00–21:00，合集《鲸鱼娘的打工日记》
 - 封面：按 `VISUAL-SYSTEM.md §9` 出，**一次出 16:9 与 4:3 两版**；深海底不变、双角标（小紫打工日记 + DAY N）、主标题阿里普惠体 115 Black + 白字珊瑚描边 + 发光 + 硬阴影，文字只留 3 块 + 1 个合规标
 
+### 6.0 发布后归档（强制）
+
+**只有一个归档目录**：`$W/releases/<YYYY-MM-DD>_<BV>/`（`$W = ~/dsh-space/whale-video`）。**不要再新建别的归档文件夹**（以前误建过 `发布归档/`，已删）。
+
+| 文件 | 说明 |
+|---|---|
+| `video.mp4` | 成片 |
+| `cover16.png` / `cover43.png` | 两版封面 |
+| `desc.txt` | 简介原文 |
+| `script.json` / `timeline.json` | 台词与时间轴 |
+| `audio.wav` | 成片音轨 |
+| `manifest.json` | bvid / title / publishedAt / series / episode / firstDayStats / artifacts / archivedAt |
+
+`manifest.json` 字段照已有条目写，`artifacts` 里的 true/false 如实反映文件是否存在。
+
 ### 6.1 发布执行（catbus）
 
 ```bash
@@ -214,14 +252,67 @@ catbus bilibili item publish \
   --video out/checkup.mp4 \
   --cover out/cover-16x9.jpg --cover43 out/cover-4x3.png \
   --tag 人工智能 --tag AI --tag 鲸鱼娘 --tag AI打工日记 \
-  --category 231 --visibility public -y
+  --category 231 --series 9514897 --visibility public -y
 ```
 
 - **`--cover` 是 16:9（播放页），`--cover43` 是 4:3（稿件列表页），两张必须同时给。** 少给一张，列表页就只能用系统裁切，构图会歪。
 - `--category 231` = 科技 / 计算机技术，和系列已发稿件保持一致（不是 188 科技大区）。
+- **`--series 9514897` 必带**：合集《小紫打工日记｜鲸鱼娘的低电量日常》，漏加就得事后手补。
+- 合集默认按「添加顺序」排，补加的视频会堆到末尾；要按时间排，去创作中心 → 合集管理把排序方式改成「按发布时间」。
 - 只换封面不用重传视频：`catbus bilibili item edit <BV> --cover a16.jpg --cover43 a43.png`（提交后会重新审核）。
 - 需要带 `--cover43` 的 catbus（对应提交 a4c2416 / PR #44）。npm 上的 0.2.1 还没有，本地分支构建即可，不必等合并：`git archive a4c2416 | tar -x -C /tmp/catbus-dual`，链上原仓库 node_modules 后 `npm run build`，用 `node dist/cli/main.js` 跑。
 - 发布后检查：稿件列表页的缩略是不是 4:3 那张，不是就说明 `--cover43` 没生效。
+
+
+## 6.2 归档（每期必做，2026-11-10 定）
+
+每期发布后，**按日期归档**到 `$W/releases/`，目录名 `YYYY-MM-DD_<BV号>`：
+
+```
+releases/2026-11-10_BV1xxxx/
+├── video.mp4          # 成片（原分辨率，不压缩）
+├── cover-16x9.png     # 播放页封面
+├── cover-4x3.png      # 列表页封面
+├── desc.md            # 标题 / 简介 / 标签 / 互动语（发布时用的原文）
+├── script.md          # 台词全文（逐句）
+├── timeline.json      # 音画时间轴（cues + total）
+├── audio.wav          # 混音成品
+└── manifest.json      # bvid / 标题 / 发布时间 / 首日数据 / 栏目 / 期号
+```
+
+硬规则：
+
+1. **先归档再发下一条**：没归档不许开新一期。
+2. **原片不替换**：不要用压缩版覆盖 `video.mp4`。
+3. **manifest 必须写全**：`bvid / title / publishedAt / series / episode / durationSec / firstDayStats`。
+4. 归档脚本：`tools/archive_ep.py <BV号> <源mp4> <cover16> <cover43> [--desc 文件] [--script 文件] [--timeline 文件]`。
+5. 季度清理时可以删工程目录，`releases/` 不允许删。
+6. **只归档可确认的成片**：源文件对不上（B 站二次编码、同名多版本）时**宁空缺**，只留 manifest 并标 `artifacts.video=false`，不要凭时长/文件名猜测拷入——错档比空档更糟。
+
+### 6.2 每天开头：账号数据复盘（强制，2026-11-11 定）
+
+每集正片**前 10–18 秒**固定播「数据日报」，再进本期内容。
+
+**取数**：`~/dsh-work/recap/recap.py` → 每次运行抓一次快照，写 `data/history.json` 与 `data/recap.json`。
+
+| 字段 | 含义 |
+|---|---|
+| `today.fans / views / likes / coins / comments` | 当前累计 |
+| `delta.*` | 与**上一个日期**的差（前一天没有记录就取最近一条，并标 `近 N 天`） |
+| `label` | `昨日` 或 `近 N 天`，口播必须念出来 |
+
+**画面**：标题「账号数据 · {label}」+ 六张指标卡（粉丝 / 总播放 / 获赞 / 硬币 / 评论 / 视频数），每张带 `▲/▼` 差值；差值缺失（无基线）时不显示箭头，不要写 0。
+
+**口播**：三句以内。
+1. `粉丝 X，比{label}多了 Y。`
+2. `总播放 X，新增 Y。`
+3. 一句结论（涨/跌的原因，例如「八成是某条被骂出来的」）。
+
+**规则**：
+- 差值必须真实，**不许估算**；拿不到前一天就明说「近 N 天」。
+- 数据快照每天留档（`data/history-YYYY-MM-DD.json`），否则第二天没法比。
+- 涨跌用词跟数字一致：涨说「多了」，跌说「掉了」，持平说「没动」。
+- 若当日没有新视频，仍要报「今天没发，数据是自然增长」。
 
 ## 7. 统一片头 / 片尾（强制）
 

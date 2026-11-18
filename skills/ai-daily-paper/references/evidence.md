@@ -325,3 +325,136 @@ python3 -c "from PIL import Image;im=Image.open('/tmp/x.png');w,h=im.size;im.cro
 9. 官方架构图 / 公告配图
 
 禁止：同一张图重复出现在多个面板；纯文字段落占满 4 格。
+
+## 新模型发布：视频证据优先（2026-11-11 主人定）
+遇到「新模型发布 / 官方演示」类新闻，证据优先级改为：
+1. **官方演示视频**（X 原帖里的视频、官方发布视频、发布会录屏）——下载后直接嵌进画面播放
+2. **演示作品截图**（视频里的关键帧、官方示例图）
+3. 官方文字页 / 博客截图
+4. 媒体转述截图
+
+获取方法（已验通）：
+```bash
+# 1. 拿 vxtwitter JSON，取 mediaURLs
+curl -sL "https://api.vxtwitter.com/i/status/<ID>" | python3 -c "import json,sys;print(json.load(sys.stdin)['mediaURLs'])"
+# 2. 下载 mp4（带代理）
+curl -L -A "Mozilla/5.0" "<video.twimg.com 链接>" -o public/evidence/<name>.mp4
+# 3. 截取可用片段（无声，避免压掉旁白）
+ffmpeg -y -ss 0 -t 12 -i <full>.mp4 -an -c:v libx264 -crf 20 <clip>.mp4
+# 4. edition 里给 scene 加 "video": "evidence/<clip>.mp4"
+```
+模板已支持：`VideoPaper` 的 Story 在 `video` 字段存在时渲染 `OffthreadVideo muted`（380px 高，objectFit cover）。
+截图只作补充，不允许整段只有一张静态图。
+
+## 第三方测评视频（2026-11-11 定，优先 X）
+**来源优先级：X 高热度原帖 > YouTube 测评 > 媒体转述。** X 是首选，不是兜底。
+
+选片硬标准（缺一不可）：
+- 平台：**X 原帖**（有 status ID，能出卡片/能下视频）
+- 热度：**播放 ≥ 10 万或点赞 ≥ 2,000**；同一模型有多条时挑互动最高的
+- 内容：有具体数字（指数分、价格、耗时、跑分），不是"感觉很厉害"
+- 作者：有蓝标或可辨认的测评者/机构（@itsPaulAi、@scaling01、@ArtificialAnlys、@lmarena_ai 等）
+
+获取流程：
+1. `r.jina.ai/https://x.com/<handle>` 找候选帖 → 记录正文与互动数
+2. 媒体文章 HTML 里 grep `status/(\d+)` 拿 ID（jina 输出常不带 ID）
+3. `api.vxtwitter.com/i/status/<ID>` 取 `mediaURLs` → 下载 mp4 → ffmpeg 截 10 秒
+4. 只有 X 上确实没有可用视频时，才降级到 YouTube（标注"降级来源"）
+```bash
+yt-dlp --proxy http://127.0.0.1:7897 "ytsearch5:<模型名> review" --print "%(id)s | %(title)s | %(duration)s"
+yt-dlp --proxy http://127.0.0.1:7897 -f "bv*[height<=720]/b[height<=720]" -o "/tmp/rev.%(ext)s" "https://www.youtube.com/watch?v=<id>"
+ffmpeg -y -ss 60 -t 10 -i /tmp/rev.mp4 -an -vf scale=1280:-2 -c:v libx264 -crf 22 public/evidence/<name>-review.mp4
+```
+- 选片标准：有具体数字（指数分、价格、耗时）的评测段，不要开场闲聊
+- scene 里加 `"video": "evidence/<name>-review.mp4"`，标题写「第三方测评」，正文写他给出的具体结论
+- 画面角标注明作者与平台（如「Kagan Erkan · YouTube」）
+
+## X 检索（无 API Key 的实测结论，2026-11-11）
+工具：`tools/x-find.py "关键词" --only-video --min-likes 200`
+链路：DuckDuckGo HTML（`html.duckduckgo.com/html/?q=site:x.com+"关键词"`，返回 status 链接）→ `api.vxtwitter.com` 取互动/媒体 → 按点赞排序。
+
+实测有效性：
+- ✅ DDG HTML：能出 status ID（首轮拿到 8 条），但**连续查询会 202 限流**，需间隔数分钟 + 换 UA
+- ❌ x.com/search（登录墙）、xcancel（451）、Bing/Mojeek（不返回 x.com 链接）、searx.be（验证码）
+- ❌ lite.duckduckgo.com（同样 202）
+
+开源可参考（按可行性）：
+1. **twscrape**（Python，需一个可登录的小号 cookie，能搜索、能翻页，最稳）
+2. **twikit**（同上，登录态 + 搜索 API）
+3. Nitter 系（多数实例已死，只剩零星可用）
+4. snscrape（2023 起基本失效，不要用）
+5. RSSHub 的 twitter 路由（需 auth token）
+
+结论：**要稳定搜 X，必须给一个登录态或 API key**；无凭证时只能用 DDG 碰运气 + 已知 ID 直取。
+
+## X 登录态获取与检索（2026-11-11 全流程跑通，照抄即可）
+
+### 1. 一次性：拿到 auth_token + ct0
+`auth_token` 是 httpOnly，DevTools 里常看不到。直接从本机 Chrome 解密：
+
+```bash
+# 前提：Chrome 里已登录小号（哪个 profile 都行，默认 Default）
+cd ~/dsh-video-remotion
+.venv-x/bin/python ~/.dsh/skills/ai-daily-paper/templates/x/chrome-cookie.py
+# 输出 auth_token / ct0，并写入 ~/dsh-video-remotion/.x-cookies.json
+```
+实现：读 `~/Library/Application Support/Google/Chrome/Default/Cookies` → Keychain `Chrome Safe Storage` → PBKDF2(saltysalt, 1003) → AES-CBC(v10) → 去掉 32 字节 host hash。
+
+### 2. 一次性：装 twscrape 并导入账号
+```bash
+cd ~/dsh-video-remotion
+python3 -m venv .venv-x && .venv-x/bin/pip install twscrape cryptography
+.venv-x/bin/python - <<'PY'
+import json, asyncio
+from twscrape import AccountsPool
+ck = json.load(open('.x-cookies.json'))
+async def main():
+    pool = AccountsPool("x_accounts.db")
+    await pool.add_account("zya_burner", "", "", "",
+        cookies=f"auth_token={ck['auth_token']}; ct0={ck['ct0']}",
+        proxy="http://127.0.0.1:7897")
+    await pool.login_all()
+asyncio.run(main())
+PY
+```
+
+### 3. 每次检索：按播放量排序
+```bash
+.venv-x/bin/python ~/.dsh/skills/ai-daily-paper/templates/x/x-search.py \
+  '"Gemini 4 Carbon"' --limit 50 --min-faves 20 --out /tmp/x.json
+```
+输出 `views / likes / user / text / videos[]`，按 views 降序。twscrape 的 `t.media` 是对象**不可迭代**，要用 `.videos` / `.animated`。
+
+### 4. 下载证据视频
+```bash
+bash ~/.dsh/skills/ai-daily-paper/templates/x/x-video.sh "<video.twimg.com 链接>" 3 11 public/evidence/xxx-x.mp4
+```
+
+### 5. 硬限制
+- X 搜索接口 **约每 15 分钟放行一次**（`SearchTimeline` 队列），一天 3 次巡检刚好
+- Playwright 直开 x.com 登录会被拦（报「出现意外错误」），**不要走浏览器自动化登录**
+- 无凭证兜底：DDG HTML `site:x.com "关键词"`（会 202 限流）→ `api.vxtwitter.com` 取正文
+
+## 首选：catbus X（2026-11-11 确认）
+catbus 自带 X 支持，**带播放量**，比 twscrape 更好用，优先用它。
+
+```bash
+# 一次性：cookie 登录（必须带 --proxy，否则超时）
+node ~/self-projects/catbus/dist/cli/main.js -a main_x --proxy http://127.0.0.1:7897 \
+  x auth login --cookie @/tmp/xck.txt --method cookie
+
+# 搜索视频帖（--type video，按热度返回，带 views/likes）
+node ~/self-projects/catbus/dist/cli/main.js -a main_x --proxy http://127.0.0.1:7897 \
+  x item search "Gemini 4 Carbon" --type video --limit 8
+# 支持 --sort latest、--type video|image、--limit N、--all、--cursor
+
+# 取单条（含媒体 URL）
+node ... --raw x item get <ID>
+
+# 下载媒体（注意：大文件常超时，建议改成 curl 直下）
+node ... x item download <ID> --dir /tmp/xdl
+```
+下载失败时的替代：`--raw x item get <ID>` 里 grep `https://video.twimg.com/...mp4`，再
+`curl -sL --proxy http://127.0.0.1:7897 "<url>" -o /tmp/x.mp4`。
+
+实测样例（Gemini 4 Carbon）：@Google 1,426,135 播放 / @GoogleAI 279,038 / @lyraxana 99,537（三代同测）/ @GoogleDeepMind 58,748 / @lucasjvds 23,273。
