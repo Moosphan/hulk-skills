@@ -46,6 +46,24 @@ description: 鲸鱼娘《打工日记》系列短视频的完整制作工作流�
 - 生成是**非确定性的**：同一句多跑几次，挑最像的；一次一集，别混用不同批次。
 - 对话里另一个人（主人/招聘方等）换一个音色：克隆另一段参考音，或临时用 Edge 男声（`zh-CN-YunjianNeural`），并在简介里注明“双角色配音”。
 
+### 1.1b 双角色对白（对手戏默认）
+
+**规则（2026-11-20 主人定）**：只要有"主人/招聘方/同行"说话，就必须给对面一个独立音色，
+不能全用一个小紫的声音念完——否则听不出对话。
+
+- 小紫：Qwen 克隆「D1-soft」（1.1）
+- 主人（男声）：Edge TTS `zh-CN-YunjianNeural`，`--rate=-4% --pitch=-2Hz`，后处理同上
+- 其他角色：克隆对应参考音，或临时用 Edge 的其他中文音色；同一集内不重复用同一个音色演两个人
+
+```bash
+python3 -m edge_tts --voice zh-CN-YunjianNeural --text "$TEXT" \
+  --rate=-4% --pitch=-2Hz --write-media /tmp/m.mp3
+ffmpeg -y -i /tmp/m.mp3 -af "highshelf=f=6000:g=1.5,deesser=i=0.4,acompressor=threshold=-18dB:ratio=2:attack=8:release=180,loudnorm=I=-16:TP=-1.5:LRA=9,aresample=48000" -ac 2 /tmp/m.wav
+```
+
+**排布要求**：一拍一句、按说话人交替；聊天气泡用一条持续线程累积显示（不要每拍重画一个面板，
+否则交叉淡入会出现重影）。发布简介注明"双角色配音"。
+
 ### 1.2 备选 A · Edge TTS 小伊（旧默认，仍可用）
 
 **小紫 = Edge TTS `zh-CN-XiaoyiNeural`（小伊 · 甜元气）**
